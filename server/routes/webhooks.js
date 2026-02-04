@@ -4,6 +4,19 @@ const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 const axios = require('axios');
 const db = require('../database');
+const rateLimit = require('express-rate-limit');
+
+// Webhook delivery timeout in milliseconds
+const WEBHOOK_TIMEOUT_MS = 10000;
+
+// Rate limiter for webhook operations
+const webhookLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many webhook requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
@@ -15,9 +28,13 @@ const authenticateToken = (req, res, next) => {
   }
 
   const jwt = require('jsonwebtoken');
-  const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+  const JWT_SECRET = process.env.JWT_SECRET;
+  
+  if (!JWT_SECRET) {
+    console.error('WARNING: JWT_SECRET is not set in environment variables. Using insecure fallback.');
+  }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(token, JWT_SECRET || 'your-secret-key', (err, user) => {
     if (err) {
       return res.status(403).json({ error: 'Invalid or expired token' });
     }
@@ -28,6 +45,9 @@ const authenticateToken = (req, res, next) => {
 
 // Apply authentication to all routes
 router.use(authenticateToken);
+
+// Apply rate limiting to all routes
+router.use(webhookLimiter);
 
 // Get all webhooks
 router.get('/', async (req, res) => {
@@ -250,7 +270,7 @@ async function deliverWebhook(webhook, payload) {
         'X-FormForce-Delivery': deliveryId,
         'X-FormForce-Event': payload.event
       },
-      timeout: 10000 // 10 second timeout
+      timeout: WEBHOOK_TIMEOUT_MS
     });
 
     // Log successful delivery
@@ -309,6 +329,12 @@ async function deliverWebhook(webhook, payload) {
 // Trigger webhooks for an event
 async function triggerWebhooks(event, data) {
   try {
+    // Validate event parameter to prevent SQL injection
+    if (typeof event !== 'string' || !event.match(/^[a-zA-Z0-9._-]+$/)) {
+      console.error('Invalid event name:', event);
+      return;
+    }
+
     const webhooks = await db.query(
       `SELECT * FROM webhooks 
        WHERE is_active = 1 AND events LIKE ?`,

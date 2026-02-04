@@ -22,6 +22,7 @@ function Integrations() {
     events: [],
     permissions: []
   });
+  const [testResult, setTestResult] = useState(null);
 
   const integrationTypes = [
     { value: 'quickbooks', label: 'QuickBooks', icon: '📊' },
@@ -125,10 +126,20 @@ function Integrations() {
       const headers = { Authorization: `Bearer ${token}` };
 
       const response = await axios.post(`${API_BASE_URL}/${type}/${id}/test`, {}, { headers });
-      alert(response.data.success ? 'Test successful!' : `Test failed: ${response.data.message}`);
+      setTestResult({
+        success: response.data.success,
+        message: response.data.success ? 'Test successful!' : `Test failed: ${response.data.message}`
+      });
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => setTestResult(null), 5000);
     } catch (error) {
       console.error('Error testing:', error);
-      alert('Test failed. Please check the configuration.');
+      setTestResult({
+        success: false,
+        message: 'Test failed. Please check the configuration.'
+      });
+      setTimeout(() => setTestResult(null), 5000);
     }
   };
 
@@ -137,8 +148,14 @@ function Integrations() {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
+      // Determine new status based on type and current status
+      const isActive = currentStatus === 'active' || currentStatus === 1;
+      const newStatus = type === 'integrations' 
+        ? (isActive ? 'inactive' : 'active')
+        : (isActive ? 0 : 1);
+
       await axios.put(`${API_BASE_URL}/${type}/${id}`, 
-        { [type === 'integrations' ? 'status' : 'is_active']: currentStatus === 'active' || currentStatus === 1 ? (type === 'integrations' ? 'inactive' : 0) : (type === 'integrations' ? 'active' : 1) },
+        { [type === 'integrations' ? 'status' : 'is_active']: newStatus },
         { headers }
       );
       fetchData();
@@ -201,6 +218,13 @@ function Integrations() {
         <div className="error-message">
           {error}
           <button onClick={() => setError(null)}>✕</button>
+        </div>
+      )}
+
+      {testResult && (
+        <div className={testResult.success ? 'success-message' : 'error-message'}>
+          {testResult.message}
+          <button onClick={() => setTestResult(null)}>✕</button>
         </div>
       )}
 

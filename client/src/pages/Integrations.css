@@ -31,10 +31,23 @@
   align-items: center;
 }
 
-.error-message button {
+.success-message {
+  background-color: #d1fae5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-message button,
+.success-message button {
   background: none;
   border: none;
-  color: #c33;
+  color: inherit;
   font-size: 1.2rem;
   cursor: pointer;
   padding: 0 10px;

@@ -3,6 +3,16 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 const db = require('../database');
+const rateLimit = require('express-rate-limit');
+
+// Rate limiter for API key operations
+const apiKeyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many API key requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
@@ -14,9 +24,13 @@ const authenticateToken = (req, res, next) => {
   }
 
   const jwt = require('jsonwebtoken');
-  const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+  const JWT_SECRET = process.env.JWT_SECRET;
+  
+  if (!JWT_SECRET) {
+    console.error('WARNING: JWT_SECRET is not set in environment variables. Using insecure fallback.');
+  }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(token, JWT_SECRET || 'your-secret-key', (err, user) => {
     if (err) {
       return res.status(403).json({ error: 'Invalid or expired token' });
     }
@@ -27,6 +41,9 @@ const authenticateToken = (req, res, next) => {
 
 // Apply authentication to all routes
 router.use(authenticateToken);
+
+// Apply rate limiting to all routes
+router.use(apiKeyLimiter);
 
 // Generate API key
 function generateApiKey() {
