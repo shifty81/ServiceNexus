@@ -18,6 +18,7 @@ import TimeTracking from './pages/TimeTracking';
 import ServiceCalls from './pages/ServiceCalls';
 import ServiceCallDetail from './pages/ServiceCallDetail';
 import PurchaseOrders from './pages/PurchaseOrders';
+import Integrations from './pages/Integrations';
 import { io } from 'socket.io-client';
 
 function App() {
@@ -79,6 +80,7 @@ function App() {
             <Route path="/estimates" element={<Estimates socket={socket} />} />
             <Route path="/invoices" element={<Invoices socket={socket} />} />
             <Route path="/timetracking" element={<TimeTracking socket={socket} />} />
+            <Route path="/integrations" element={<Integrations socket={socket} />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

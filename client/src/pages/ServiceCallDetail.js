@@ -56,6 +56,7 @@ function ServiceCallDetail({ socket }) {
         socket.off('equipment-added');
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, socket, userType]);
 
   const loadServiceCall = async () => {
