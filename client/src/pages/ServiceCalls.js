@@ -38,6 +38,7 @@ function ServiceCalls({ socket }) {
     return () => {
       if (socket) socket.off('service-call-changed');
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket]);
 
   const loadServiceCalls = async () => {

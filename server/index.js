@@ -20,6 +20,9 @@ const qrCodesRouter = require('./routes/qrcodes');
 const equipmentRouter = require('./routes/equipment');
 const picturesRouter = require('./routes/pictures');
 const purchaseOrdersRouter = require('./routes/purchaseorders');
+const integrationsRouter = require('./routes/integrations');
+const apiKeysRouter = require('./routes/apikeys');
+const webhooksRouter = require('./routes/webhooks');
 
 const app = express();
 const server = http.createServer(app);
@@ -57,6 +60,9 @@ app.use('/api/qrcodes', qrCodesRouter);
 app.use('/api/equipment', equipmentRouter);
 app.use('/api/pictures', picturesRouter);
 app.use('/api/purchaseorders', purchaseOrdersRouter);
+app.use('/api/integrations', integrationsRouter);
+app.use('/api/apikeys', apiKeysRouter);
+app.use('/api/webhooks', webhooksRouter);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {

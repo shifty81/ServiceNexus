@@ -304,6 +304,91 @@ const initialize = () => {
           FOREIGN KEY (requested_by) REFERENCES users(id),
           FOREIGN KEY (approved_by) REFERENCES users(id)
         )
+      `);
+
+      // Integrations table for external system connections
+      db.run(`
+        CREATE TABLE IF NOT EXISTS integrations (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          type TEXT NOT NULL,
+          status TEXT DEFAULT 'inactive',
+          config TEXT,
+          credentials TEXT,
+          last_sync DATETIME,
+          sync_status TEXT,
+          error_message TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          created_by TEXT,
+          FOREIGN KEY (created_by) REFERENCES users(id)
+        )
+      `);
+
+      // Integration sync logs for tracking sync history
+      db.run(`
+        CREATE TABLE IF NOT EXISTS integration_sync_logs (
+          id TEXT PRIMARY KEY,
+          integration_id TEXT NOT NULL,
+          sync_type TEXT NOT NULL,
+          status TEXT NOT NULL,
+          records_processed INTEGER DEFAULT 0,
+          records_succeeded INTEGER DEFAULT 0,
+          records_failed INTEGER DEFAULT 0,
+          error_details TEXT,
+          started_at DATETIME NOT NULL,
+          completed_at DATETIME,
+          FOREIGN KEY (integration_id) REFERENCES integrations(id)
+        )
+      `);
+
+      // API keys table for external API access
+      db.run(`
+        CREATE TABLE IF NOT EXISTS api_keys (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          key_hash TEXT UNIQUE NOT NULL,
+          key_prefix TEXT NOT NULL,
+          permissions TEXT NOT NULL,
+          last_used DATETIME,
+          expires_at DATETIME,
+          is_active INTEGER DEFAULT 1,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          created_by TEXT,
+          FOREIGN KEY (created_by) REFERENCES users(id)
+        )
+      `);
+
+      // Webhooks table for event notifications
+      db.run(`
+        CREATE TABLE IF NOT EXISTS webhooks (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          url TEXT NOT NULL,
+          events TEXT NOT NULL,
+          secret TEXT,
+          is_active INTEGER DEFAULT 1,
+          last_triggered DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          created_by TEXT,
+          FOREIGN KEY (created_by) REFERENCES users(id)
+        )
+      `);
+
+      // Webhook delivery log for tracking webhook calls
+      db.run(`
+        CREATE TABLE IF NOT EXISTS webhook_deliveries (
+          id TEXT PRIMARY KEY,
+          webhook_id TEXT NOT NULL,
+          event TEXT NOT NULL,
+          payload TEXT NOT NULL,
+          response_status INTEGER,
+          response_body TEXT,
+          delivered_at DATETIME NOT NULL,
+          succeeded INTEGER DEFAULT 0,
+          error_message TEXT,
+          FOREIGN KEY (webhook_id) REFERENCES webhooks(id)
+        )
       `, (err) => {
         if (err) reject(err);
         else {
