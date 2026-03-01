@@ -38,6 +38,15 @@ function TechPortal({ socket }) {
     }
   };
 
+  const handleUpdateStatus = async (callId, newStatus) => {
+    try {
+      await axios.put(`/api/servicecalls/${callId}`, { status: newStatus });
+      loadPortalData();
+    } catch (error) {
+      console.error('Error updating job status:', error);
+    }
+  };
+
   const handleStartJob = async (callId) => {
     try {
       await axios.put(`/api/servicecalls/${callId}`, { status: 'in-progress' });
@@ -84,6 +93,8 @@ function TechPortal({ socket }) {
   const getStatusColor = (status) => {
     const colors = {
       pending: '#ffc107',
+      'on-the-way': '#f97316',
+      arrived: '#8b5cf6',
       'in-progress': '#17a2b8',
       completed: '#28a745',
       cancelled: '#6c757d'
@@ -206,8 +217,8 @@ function TechPortal({ socket }) {
                     </div>
                   )}
                   {call.customer_address && (
-                    <button className="tech-job-address" onClick={() => openMap(call.customer_address)}>
-                      📍 {call.customer_address} →
+                    <button className="tech-navigate-btn" onClick={() => openMap(call.customer_address)}>
+                      🗺️ Navigate to Job Site
                     </button>
                   )}
                   {call.description && (
@@ -216,6 +227,41 @@ function TechPortal({ socket }) {
                   {call.due_date && (
                     <div className="tech-job-due">Due: {new Date(call.due_date).toLocaleDateString()}</div>
                   )}
+                  {/* Workflow status buttons — inspired by ServiceTitan / Housecall Pro */}
+                  <div className="tech-workflow">
+                    {call.status === 'pending' && (
+                      <button
+                        className="tech-workflow-btn tech-workflow-onway"
+                        onClick={() => handleUpdateStatus(call.id, 'on-the-way')}
+                      >
+                        🚗 On My Way
+                      </button>
+                    )}
+                    {call.status === 'on-the-way' && (
+                      <button
+                        className="tech-workflow-btn tech-workflow-arrived"
+                        onClick={() => handleUpdateStatus(call.id, 'arrived')}
+                      >
+                        📍 Arrived
+                      </button>
+                    )}
+                    {call.status === 'arrived' && (
+                      <button
+                        className="tech-workflow-btn tech-workflow-start"
+                        onClick={() => handleStartJob(call.id)}
+                      >
+                        🔧 Start Work
+                      </button>
+                    )}
+                    {call.status === 'in-progress' && (
+                      <button
+                        className="tech-workflow-btn tech-workflow-complete"
+                        onClick={() => handleCompleteJob(call.id)}
+                      >
+                        ✅ Complete Job
+                      </button>
+                    )}
+                  </div>
                   <div className="tech-job-actions">
                     <button
                       className="tech-btn tech-btn-view"
@@ -223,21 +269,10 @@ function TechPortal({ socket }) {
                     >
                       View Details
                     </button>
-                    {call.status === 'pending' && (
-                      <button
-                        className="tech-btn tech-btn-start"
-                        onClick={() => handleStartJob(call.id)}
-                      >
-                        ▶️ Start Job
-                      </button>
-                    )}
-                    {call.status === 'in-progress' && (
-                      <button
-                        className="tech-btn tech-btn-complete"
-                        onClick={() => handleCompleteJob(call.id)}
-                      >
-                        ✅ Complete
-                      </button>
+                    {call.customer_phone && (
+                      <a href={`tel:${call.customer_phone}`} className="tech-btn tech-btn-call">
+                        📞 Call
+                      </a>
                     )}
                   </div>
                 </div>

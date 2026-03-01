@@ -3,6 +3,19 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import './CustomerPortal.css';
 
+const STATUS_STEPS = [
+  { key: 'pending', label: 'Submitted', icon: '📝' },
+  { key: 'scheduled', label: 'Scheduled', icon: '📅' },
+  { key: 'on-the-way', label: 'Tech En Route', icon: '🚗' },
+  { key: 'in-progress', label: 'In Progress', icon: '🔧' },
+  { key: 'completed', label: 'Completed', icon: '✅' }
+];
+
+function getStepIndex(status) {
+  const idx = STATUS_STEPS.findIndex(s => s.key === status);
+  return idx >= 0 ? idx : 0;
+}
+
 function CustomerPortal({ socket }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,6 +53,8 @@ function CustomerPortal({ socket }) {
   const getStatusColor = (status) => {
     const colors = {
       pending: '#ffc107',
+      scheduled: '#6366f1',
+      'on-the-way': '#f97316',
       'in-progress': '#17a2b8',
       completed: '#28a745',
       cancelled: '#6c757d',
@@ -58,6 +73,9 @@ function CustomerPortal({ socket }) {
   }
 
   const stats = data?.stats || {};
+  const activeCall = (data?.serviceCalls || []).find(c =>
+    c.status !== 'completed' && c.status !== 'cancelled'
+  );
 
   return (
     <div className="customer-portal">
@@ -94,6 +112,36 @@ function CustomerPortal({ socket }) {
           <div className="portal-alert">
             <span className="portal-alert-icon">💳</span>
             <span>Outstanding balance: <strong>${stats.totalOwed.toFixed(2)}</strong></span>
+          </div>
+        )}
+
+        {/* Live Job Status Tracker — inspired by ServiceTitan / Housecall Pro */}
+        {activeCall && (
+          <div className="portal-tracker">
+            <div className="portal-tracker-header">
+              <h2>📍 Live Job Tracker</h2>
+              <Link to={`/servicecalls/${activeCall.id}`} className="portal-view-all">Details →</Link>
+            </div>
+            <div className="portal-tracker-title">{activeCall.title}</div>
+            {activeCall.assigned_to_name && (
+              <div className="portal-tracker-tech">Technician: <strong>{activeCall.assigned_to_name}</strong></div>
+            )}
+            <div className="status-tracker">
+              {STATUS_STEPS.map((step, idx) => {
+                const currentIdx = getStepIndex(activeCall.status);
+                const isComplete = idx < currentIdx;
+                const isCurrent = idx === currentIdx;
+                return (
+                  <div key={step.key} className={`status-step ${isComplete ? 'complete' : ''} ${isCurrent ? 'current' : ''}`}>
+                    <div className="status-step-dot">
+                      {isComplete ? '✓' : step.icon}
+                    </div>
+                    <div className="status-step-label">{step.label}</div>
+                    {idx < STATUS_STEPS.length - 1 && <div className={`status-step-line ${isComplete ? 'complete' : ''}`} />}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

@@ -236,6 +236,103 @@
   margin-bottom: 0.75rem;
 }
 
+/* Navigate button — prominent GPS action (like ServiceTitan) */
+.tech-navigate-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: #eef2ff;
+  border: 2px solid #6366f1;
+  border-radius: 0.5rem;
+  color: #4338ca;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  min-height: 48px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: all 0.15s;
+}
+
+.tech-navigate-btn:hover,
+.tech-navigate-btn:active {
+  background: #6366f1;
+  color: white;
+}
+
+/* Workflow status buttons — inspired by ServiceTitan / Housecall Pro */
+.tech-workflow {
+  margin: 0.75rem 0 0.5rem;
+}
+
+.tech-workflow-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.875rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 52px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: all 0.15s;
+  color: white;
+}
+
+.tech-workflow-onway {
+  background: #f97316;
+}
+
+.tech-workflow-onway:hover,
+.tech-workflow-onway:active {
+  background: #ea580c;
+}
+
+.tech-workflow-arrived {
+  background: #8b5cf6;
+}
+
+.tech-workflow-arrived:hover,
+.tech-workflow-arrived:active {
+  background: #7c3aed;
+}
+
+.tech-workflow-start {
+  background: var(--primary-color);
+}
+
+.tech-workflow-start:hover,
+.tech-workflow-start:active {
+  background: #1d4ed8;
+}
+
+.tech-workflow-complete {
+  background: var(--success-color);
+}
+
+.tech-workflow-complete:hover,
+.tech-workflow-complete:active {
+  background: #059669;
+}
+
+.tech-btn-call {
+  background: var(--success-color);
+  color: white;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Action buttons - large touch targets */
 .tech-job-actions {
   display: flex;
