@@ -13,7 +13,7 @@ const calculateHoursAndPay = (clockIn, clockOut, breakDuration, hourlyRate) => {
   const total_hours = Math.max(0, (clock_out_ms - clock_in_ms - break_duration_ms) / 3600000);
   
   // Calculate total_pay as total_hours * hourly_rate
-  const total_pay = total_hours * Math.max(0, hourlyRate || 0);
+  const total_pay = total_hours * (hourlyRate || 0);
   
   return { total_hours, total_pay };
 };
