@@ -4,7 +4,7 @@ node_modules/
 .DS_Store
 client/node_modules/
 client/build/
-fieldforge.db
+servicenexus.db
 dist/
 build/
 .vscode/

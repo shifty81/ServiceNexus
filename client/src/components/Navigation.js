@@ -12,7 +12,7 @@ function Navigation({ user, onLogout }) {
       <div className="nav-container">
         <Link to="/" className="nav-brand">
           <span className="nav-logo">⚡</span>
-          FieldForge {userType === 'client' ? 'Client' : userType === 'technician' ? 'Technician' : ''}
+          ServiceNexus {userType === 'client' ? 'Client' : userType === 'technician' ? 'Technician' : ''}
         </Link>
         
         <button 

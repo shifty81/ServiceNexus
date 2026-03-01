@@ -1,5 +1,5 @@
-// Service Worker for FieldForge PWA
-const CACHE_NAME = 'fieldforge-v1';
+// Service Worker for ServiceNexus PWA
+const CACHE_NAME = 'servicenexus-v1';
 const urlsToCache = [
   '/',
   '/static/css/main.css',

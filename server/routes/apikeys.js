@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 const db = require('../database');
 const rateLimit = require('express-rate-limit');
+const { authenticateToken } = require('../middleware/auth');
 
 // Rate limiter for API key operations
 const apiKeyLimiter = rateLimit({
@@ -13,31 +14,6 @@ const apiKeyLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-
-// Authentication middleware
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-
-  const jwt = require('jsonwebtoken');
-  const JWT_SECRET = process.env.JWT_SECRET;
-  
-  if (!JWT_SECRET) {
-    console.error('WARNING: JWT_SECRET is not set in environment variables. Using insecure fallback.');
-  }
-
-  jwt.verify(token, JWT_SECRET || 'your-secret-key', (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid or expired token' });
-    }
-    req.user = user;
-    next();
-  });
-};
 
 // Apply authentication to all routes
 router.use(authenticateToken);

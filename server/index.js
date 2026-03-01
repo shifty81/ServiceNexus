@@ -137,7 +137,7 @@ io.on('connection', (socket) => {
 // Initialize database and start server
 db.initialize().then(() => {
   server.listen(PORT, () => {
-    console.log(`FieldForge server running on port ${PORT}`);
+    console.log(`ServiceNexus server running on port ${PORT}`);
   });
 }).catch(err => {
   console.error('Failed to initialize database:', err);

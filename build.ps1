@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-    Automated build script for FieldForge application
+    Automated build script for ServiceNexus application
 
 .DESCRIPTION
-    This PowerShell script automates the complete build process for the FieldForge 
+    This PowerShell script automates the complete build process for the ServiceNexus 
     AI-powered mobile forms and field service management platform. It handles 
     prerequisite checks, dependency installation, environment setup, and building 
     the project to a usable state.
@@ -81,7 +81,7 @@ function Write-Warning-Custom {
 Write-Host "`n" -NoNewline
 Write-Host "╔════════════════════════════════════════════════════╗" -ForegroundColor Magenta
 Write-Host "║                                                    ║" -ForegroundColor Magenta
-Write-Host "║           FieldForge Build Automation               ║" -ForegroundColor Magenta
+Write-Host "║           ServiceNexus Build Automation              ║" -ForegroundColor Magenta
 Write-Host "║     AI-Powered Forms & Field Service Platform      ║" -ForegroundColor Magenta
 Write-Host "║                                                    ║" -ForegroundColor Magenta
 Write-Host "╚════════════════════════════════════════════════════╝" -ForegroundColor Magenta
@@ -270,7 +270,7 @@ else {
 Write-Step "Build Process Complete!"
 
 Write-Host ""
-Write-Success "FieldForge is now built and ready to use!"
+Write-Success "ServiceNexus is now built and ready to use!"
 Write-Host ""
 
 Write-Info "Application URLs:"
