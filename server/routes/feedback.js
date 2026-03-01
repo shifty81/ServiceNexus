@@ -3,6 +3,8 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 
+const MAX_COMMENT_LENGTH = 1000;
+
 // Get all feedback (admin view)
 router.get('/', async (req, res) => {
   try {
@@ -112,7 +114,7 @@ router.post('/', async (req, res) => {
     }
 
     const id = uuidv4();
-    const sanitizedComment = comment ? String(comment).slice(0, 1000) : null;
+    const sanitizedComment = comment ? String(comment).slice(0, MAX_COMMENT_LENGTH) : null;
 
     await db.run(
       `INSERT INTO feedback (id, service_call_id, technician_id, rating, comment, submitted_by)

@@ -86,7 +86,7 @@ router.get('/technician/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const [assignedCalls, dispatches, timeEntries, recentPOs, feedbackRows] = await Promise.all([
+    const [assignedCalls, dispatches, timeEntries, recentPOs, feedbackRows, feedbackStats] = await Promise.all([
       db.query(
         `SELECT sc.*, c.contact_name as customer_name, c.phone as customer_phone, c.address as customer_address
          FROM service_calls sc
@@ -133,6 +133,12 @@ router.get('/technician/:userId', async (req, res) => {
          ORDER BY f.created_at DESC
          LIMIT 5`,
         [userId]
+      ),
+      db.get(
+        `SELECT COUNT(*) as total_reviews, COALESCE(AVG(rating), 0) as average_rating
+         FROM feedback
+         WHERE technician_id = ?`,
+        [userId]
       )
     ]);
 
@@ -150,9 +156,8 @@ router.get('/technician/:userId', async (req, res) => {
       })
       .reduce((sum, te) => sum + (te.total_hours || 0), 0);
 
-    const avgRating = feedbackRows.length > 0
-      ? feedbackRows.reduce((sum, f) => sum + f.rating, 0) / feedbackRows.length
-      : 0;
+    const avgRating = feedbackStats ? feedbackStats.average_rating : 0;
+    const totalReviews = feedbackStats ? feedbackStats.total_reviews : 0;
 
     res.json({
       stats: {
@@ -162,7 +167,7 @@ router.get('/technician/:userId', async (req, res) => {
         todayHours: Math.round(todayHours * 10) / 10,
         isClockedIn: !!activeTimeEntry,
         averageRating: Math.round(avgRating * 10) / 10,
-        totalReviews: feedbackRows.length
+        totalReviews
       },
       assignedCalls,
       dispatches: dispatches.slice(0, 10),
