@@ -3,7 +3,8 @@ import axios from 'axios';
 import './ApiDocs.css';
 
 function ApiDocs() {
-  const [endpoints, setEndpoints] = useState([]);
+  const [groups, setGroups] = useState({});
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
@@ -20,7 +21,8 @@ function ApiDocs() {
     try {
       setLoading(true);
       const response = await axios.get('/api/docs/endpoints');
-      setEndpoints(response.data.endpoints || response.data || []);
+      setGroups(response.data.groups || {});
+      setTotal(response.data.total || 0);
       setError(null);
     } catch (err) {
       setError('Failed to load API documentation');
@@ -53,25 +55,27 @@ function ApiDocs() {
     }
   };
 
-  const filtered = endpoints.filter(ep => {
-    const term = search.toLowerCase();
-    if (!term) return true;
-    return (
-      (ep.method && ep.method.toLowerCase().includes(term)) ||
-      (ep.path && ep.path.toLowerCase().includes(term)) ||
-      (ep.description && ep.description.toLowerCase().includes(term)) ||
-      (ep.category && ep.category.toLowerCase().includes(term))
-    );
-  });
+  const term = search.toLowerCase();
+  const filteredGroups = {};
+  let filteredCount = 0;
 
-  const grouped = filtered.reduce((acc, ep) => {
-    const cat = ep.category || 'Other';
-    if (!acc[cat]) acc[cat] = [];
-    acc[cat].push(ep);
-    return acc;
-  }, {});
+  for (const [category, eps] of Object.entries(groups)) {
+    const matched = eps.filter(ep => {
+      if (!term) return true;
+      return (
+        (ep.method && ep.method.toLowerCase().includes(term)) ||
+        (ep.path && ep.path.toLowerCase().includes(term)) ||
+        (ep.summary && ep.summary.toLowerCase().includes(term)) ||
+        category.toLowerCase().includes(term)
+      );
+    });
+    if (matched.length > 0) {
+      filteredGroups[category] = matched;
+      filteredCount += matched.length;
+    }
+  }
 
-  const categories = Object.keys(grouped).sort();
+  const categories = Object.keys(filteredGroups).sort();
 
   if (loading) {
     return (
@@ -132,7 +136,7 @@ function ApiDocs() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <span className="endpoint-count">{filtered.length} endpoint{filtered.length !== 1 ? 's' : ''}</span>
+          <span className="endpoint-count">{filteredCount} endpoint{filteredCount !== 1 ? 's' : ''}</span>
         </div>
 
         <div className="endpoint-groups">
@@ -149,17 +153,17 @@ function ApiDocs() {
               >
                 <span className="group-arrow">{expandedGroups[category] ? '▼' : '▶'}</span>
                 <h2>{category}</h2>
-                <span className="group-count">{grouped[category].length}</span>
+                <span className="group-count">{filteredGroups[category].length}</span>
               </div>
               {expandedGroups[category] && (
                 <div className="group-endpoints">
-                  {grouped[category].map((ep, idx) => (
+                  {filteredGroups[category].map((ep, idx) => (
                     <div className="endpoint-row" key={idx}>
                       <span className={`method-badge ${getMethodClass(ep.method)}`}>
                         {ep.method}
                       </span>
                       <code className="endpoint-path">{ep.path}</code>
-                      <span className="endpoint-desc">{ep.description}</span>
+                      <span className="endpoint-desc">{ep.summary}</span>
                     </div>
                   ))}
                 </div>
