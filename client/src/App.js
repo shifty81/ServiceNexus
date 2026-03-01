@@ -22,6 +22,8 @@ import Integrations from './pages/Integrations';
 import CustomerPortal from './pages/CustomerPortal';
 import TechPortal from './pages/TechPortal';
 import Feedback from './pages/Feedback';
+import Analytics from './pages/Analytics';
+import SystemAdmin from './pages/SystemAdmin';
 import { io } from 'socket.io-client';
 
 function App() {
@@ -93,6 +95,8 @@ function App() {
             <Route path="/timetracking" element={<TimeTracking socket={socket} />} />
             <Route path="/integrations" element={<Integrations socket={socket} />} />
             <Route path="/feedback" element={<Feedback socket={socket} />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/system" element={<SystemAdmin socket={socket} />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

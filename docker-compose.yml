@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  formforce:
+    build: .
+    ports:
+      - "${PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set for production}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - TRUST_PROXY=true
+      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
+      - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-100}
+    volumes:
+      - formforce-data:/app/data
+      - formforce-uploads:/app/uploads
+    restart: unless-stopped
+
+volumes:
+  formforce-data:
+  formforce-uploads:

@@ -103,8 +103,14 @@ function Navigation({ user, onLogout }) {
               <Link to="/feedback" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Feedback
               </Link>
+              <Link to="/analytics" className="nav-link" onClick={() => setMenuOpen(false)}>
+                Analytics
+              </Link>
               <Link to="/reports" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Reports
+              </Link>
+              <Link to="/system" className="nav-link" onClick={() => setMenuOpen(false)}>
+                System
               </Link>
             </>
           )}

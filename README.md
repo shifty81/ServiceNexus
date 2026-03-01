@@ -220,6 +220,22 @@ npm run build:all
 NODE_ENV=production npm start
 ```
 
+### Docker Deployment (Remote Hosting)
+
+```bash
+# Build and start with Docker Compose
+docker compose up -d
+
+# Or build the image manually
+docker build -t formforce .
+docker run -p 3001:3001 -e JWT_SECRET=your-secret formforce
+```
+
+Configure remote hosting via environment variables in `.env` or `docker-compose.yml`:
+- `CORS_ORIGIN` — Allowed origins (comma-separated, or `*`)
+- `TRUST_PROXY` — Set `true` behind nginx/load balancer
+- `JWT_SECRET` — Change for production security
+
 See [BUILD.md](BUILD.md) for detailed build and deployment instructions.
 
 ---
@@ -382,9 +398,17 @@ See [BUILD.md](BUILD.md) for detailed build and deployment instructions.
 - [ ] AI-powered service call routing
 - [ ] Predictive maintenance alerts
 - [x] Customer feedback system ✅
+- [x] Advanced analytics and BI ✅
 - [ ] Multi-language support
 - [ ] White-label options
-- [ ] Advanced analytics and BI
+
+### Phase 5: Remote Hosting & Management
+- [x] Security hardening (Helmet, compression) ✅
+- [x] Configurable CORS and proxy trust ✅
+- [x] Docker containerization (Dockerfile + docker-compose) ✅
+- [x] System administration dashboard ✅
+- [x] Remote health monitoring ✅
+- [x] User management panel ✅
 
 ---
 

@@ -1,0 +1,157 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../database');
+const os = require('os');
+
+// GET /api/admin/health - System health for remote monitoring
+router.get('/health', async (req, res) => {
+  try {
+    const dbCheck = await db.get('SELECT 1 AS ok');
+    const tables = await db.query(
+      "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+    );
+
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      database: dbCheck ? 'connected' : 'error',
+      tables: tables.map(t => t.name),
+      environment: process.env.NODE_ENV || 'development',
+      nodeVersion: process.version,
+      platform: os.platform(),
+      memory: {
+        total: os.totalmem(),
+        free: os.freemem(),
+        usage: process.memoryUsage()
+      }
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(503).json({ status: 'unhealthy', error: 'System health check failed' });
+  }
+});
+
+// GET /api/admin/users - List all users with stats
+router.get('/users', async (req, res) => {
+  try {
+    const users = await db.query(`
+      SELECT
+        u.id, u.username, u.email, u.role, u.user_type, u.created_at,
+        (SELECT COUNT(*) FROM time_entries WHERE user_id = u.id) AS timeEntryCount,
+        (SELECT COUNT(*) FROM service_calls WHERE assigned_to = u.id) AS serviceCallCount,
+        (SELECT ROUND(AVG(rating), 1) FROM feedback WHERE technician_id = u.id) AS averageRating
+      FROM users u
+      ORDER BY u.created_at DESC
+    `);
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching admin users:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// PUT /api/admin/users/:id - Update user role/type
+router.put('/users/:id', async (req, res) => {
+  try {
+    const { role, user_type } = req.body;
+    const { id } = req.params;
+
+    if (!role && !user_type) {
+      return res.status(400).json({ error: 'Provide role or user_type to update' });
+    }
+
+    const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const newRole = role || user.role;
+    const newType = user_type || user.user_type;
+
+    await db.run(
+      'UPDATE users SET role = ?, user_type = ? WHERE id = ?',
+      [newRole, newType, id]
+    );
+
+    const updated = await db.get(
+      'SELECT id, username, email, role, user_type, created_at FROM users WHERE id = ?',
+      [id]
+    );
+
+    const io = req.app.get('io');
+    if (io) io.emit('user-updated', updated);
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+// DELETE /api/admin/users/:id - Delete a user
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await db.run('DELETE FROM users WHERE id = ?', [id]);
+
+    const io = req.app.get('io');
+    if (io) io.emit('user-deleted', { id });
+
+    res.json({ message: 'User deleted', id });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// GET /api/admin/stats - Database table row counts
+router.get('/stats', async (req, res) => {
+  try {
+    const ALLOWED_TABLES = new Set([
+      'users', 'forms', 'form_submissions', 'dispatches', 'inventory',
+      'customers', 'estimates', 'invoices', 'time_entries', 'service_calls',
+      'feedback', 'integrations', 'api_keys', 'webhooks', 'purchase_orders',
+      'equipment', 'qr_codes'
+    ]);
+
+    const counts = {};
+    for (const table of ALLOWED_TABLES) {
+      try {
+        const row = await db.get('SELECT COUNT(*) AS count FROM "' + table.replace(/"/g, '') + '"');
+        counts[table] = row.count;
+      } catch {
+        counts[table] = 0;
+      }
+    }
+
+    res.json({
+      tableCounts: counts,
+      totalRecords: Object.values(counts).reduce((a, b) => a + b, 0),
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching admin stats:', error);
+    res.status(500).json({ error: 'Failed to fetch system stats' });
+  }
+});
+
+// GET /api/admin/config - Current server configuration (non-sensitive)
+router.get('/config', (req, res) => {
+  res.json({
+    nodeEnv: process.env.NODE_ENV || 'development',
+    port: process.env.PORT || 3001,
+    corsOrigin: process.env.CORS_ORIGIN || '*',
+    trustProxy: process.env.TRUST_PROXY === 'true',
+    rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
+    rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+    version: require('../../package.json').version
+  });
+});
+
+module.exports = router;
