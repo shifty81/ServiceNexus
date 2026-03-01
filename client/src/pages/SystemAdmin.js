@@ -8,6 +8,7 @@ function SystemAdmin({ socket }) {
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
   const [config, setConfig] = useState(null);
+  const [branding, setBranding] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
 
@@ -40,6 +41,7 @@ function SystemAdmin({ socket }) {
     else if (tab === 'users') loadUsers();
     else if (tab === 'stats') loadStats();
     else if (tab === 'config') loadConfig();
+    else if (tab === 'branding') loadBranding();
   }
 
   function loadHealth() {
@@ -64,6 +66,21 @@ function SystemAdmin({ socket }) {
     axios.get('/api/admin/config')
       .then(res => { setConfig(res.data); setLoading(false); })
       .catch(() => { setLoading(false); showNotification('Failed to load config', 'error'); });
+  }
+
+  function loadBranding() {
+    axios.get('/api/admin/settings')
+      .then(res => { setBranding(res.data); setLoading(false); })
+      .catch(() => { setLoading(false); showNotification('Failed to load branding', 'error'); });
+  }
+
+  function saveBranding() {
+    axios.put('/api/admin/settings', branding)
+      .then(res => {
+        setBranding(res.data);
+        showNotification('Branding saved successfully', 'success');
+      })
+      .catch(() => showNotification('Failed to save branding', 'error'));
   }
 
   function updateUserRole(userId, role, userType) {
@@ -119,7 +136,7 @@ function SystemAdmin({ socket }) {
         )}
 
         <div className="tabs">
-          {['health', 'users', 'stats', 'config'].map(tab => (
+          {['health', 'users', 'stats', 'config', 'branding'].map(tab => (
             <button
               key={tab}
               className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
@@ -129,6 +146,7 @@ function SystemAdmin({ socket }) {
               {tab === 'users' && '👥 Users'}
               {tab === 'stats' && '📊 Database'}
               {tab === 'config' && '⚙️ Config'}
+              {tab === 'branding' && '🎨 Branding'}
             </button>
           ))}
         </div>
@@ -320,6 +338,167 @@ function SystemAdmin({ socket }) {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Branding / White-Label Tab */}
+        {!loading && activeTab === 'branding' && branding && (
+          <div className="tab-content">
+            <div className="info-card">
+              <h3>🏷️ Brand Identity</h3>
+              <div className="branding-form">
+                <div className="form-group">
+                  <label className="form-label">Brand Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={branding.brandName || ''}
+                    onChange={e => setBranding({ ...branding, brandName: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Tagline</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={branding.brandTagline || ''}
+                    onChange={e => setBranding({ ...branding, brandTagline: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Logo URL</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={branding.brandLogo || ''}
+                    onChange={e => setBranding({ ...branding, brandLogo: e.target.value })}
+                    placeholder="https://example.com/logo.png"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="info-card">
+              <h3>🎨 Theme Colors</h3>
+              <div className="branding-form color-grid">
+                <div className="form-group color-input-group">
+                  <label className="form-label">Primary Color</label>
+                  <div className="color-row">
+                    <input
+                      type="color"
+                      value={branding.primaryColor || '#2563eb'}
+                      onChange={e => setBranding({ ...branding, primaryColor: e.target.value })}
+                    />
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={branding.primaryColor || '#2563eb'}
+                      onChange={e => setBranding({ ...branding, primaryColor: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="form-group color-input-group">
+                  <label className="form-label">Secondary Color</label>
+                  <div className="color-row">
+                    <input
+                      type="color"
+                      value={branding.secondaryColor || '#1e40af'}
+                      onChange={e => setBranding({ ...branding, secondaryColor: e.target.value })}
+                    />
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={branding.secondaryColor || '#1e40af'}
+                      onChange={e => setBranding({ ...branding, secondaryColor: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="form-group color-input-group">
+                  <label className="form-label">Accent Color</label>
+                  <div className="color-row">
+                    <input
+                      type="color"
+                      value={branding.accentColor || '#3b82f6'}
+                      onChange={e => setBranding({ ...branding, accentColor: e.target.value })}
+                    />
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={branding.accentColor || '#3b82f6'}
+                      onChange={e => setBranding({ ...branding, accentColor: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="form-group color-input-group">
+                  <label className="form-label">Navbar Background</label>
+                  <div className="color-row">
+                    <input
+                      type="color"
+                      value={branding.navbarBg || '#1e293b'}
+                      onChange={e => setBranding({ ...branding, navbarBg: e.target.value })}
+                    />
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={branding.navbarBg || '#1e293b'}
+                      onChange={e => setBranding({ ...branding, navbarBg: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="form-group color-input-group">
+                  <label className="form-label">Navbar Text</label>
+                  <div className="color-row">
+                    <input
+                      type="color"
+                      value={branding.navbarText || '#ffffff'}
+                      onChange={e => setBranding({ ...branding, navbarText: e.target.value })}
+                    />
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={branding.navbarText || '#ffffff'}
+                      onChange={e => setBranding({ ...branding, navbarText: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="branding-preview">
+              <h3>Preview</h3>
+              <div
+                className="preview-navbar"
+                style={{
+                  background: branding.navbarBg || '#1e293b',
+                  color: branding.navbarText || '#ffffff',
+                  padding: '12px 20px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  marginBottom: '12px'
+                }}
+              >
+                <span style={{ fontSize: '1.5rem' }}>⚡</span>
+                <strong>{branding.brandName || 'ServiceNexus'}</strong>
+                <span style={{ marginLeft: 'auto', opacity: 0.7, fontSize: '0.85rem' }}>
+                  Dashboard &nbsp; Forms &nbsp; Dispatch
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button style={{ background: branding.primaryColor || '#2563eb', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px' }}>
+                  Primary
+                </button>
+                <button style={{ background: branding.secondaryColor || '#1e40af', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px' }}>
+                  Secondary
+                </button>
+                <button style={{ background: branding.accentColor || '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px' }}>
+                  Accent
+                </button>
+              </div>
+            </div>
+
+            <button className="btn btn-primary" onClick={saveBranding}>💾 Save Branding</button>
           </div>
         )}
       </div>
