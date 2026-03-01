@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 
+const LOW_STOCK_THRESHOLD = 5;
+
 // Get comprehensive analytics dashboard
 router.get('/', async (req, res) => {
   try {
@@ -167,10 +169,8 @@ async function getCustomerInsights() {
     'SELECT COUNT(*) AS count FROM customers'
   );
 
-  const currentMonth = new Date().toISOString().slice(0, 7);
   const newCustomersThisMonth = await db.get(
-    `SELECT COUNT(*) AS count FROM customers WHERE strftime('%Y-%m', created_at) = ?`,
-    [currentMonth]
+    `SELECT COUNT(*) AS count FROM customers WHERE strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')`
   );
 
   const monthlyCustomerGrowth = await db.query(`
@@ -218,7 +218,7 @@ async function getOperationalMetrics() {
   const inventory = await db.get(`
     SELECT
       COUNT(*) AS totalInventoryItems,
-      SUM(CASE WHEN quantity <= 5 THEN 1 ELSE 0 END) AS lowStockItems
+      SUM(CASE WHEN quantity <= ${LOW_STOCK_THRESHOLD} THEN 1 ELSE 0 END) AS lowStockItems
     FROM inventory
   `);
 
