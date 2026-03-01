@@ -101,6 +101,25 @@ ServiceNexus is a comprehensive, all-in-one field service management platform th
 - **Procore**: Construction management integration (coming soon)
 - **Open API**: RESTful API with authentication and comprehensive documentation
 
+### 📋 Service Agreements & Recurring Jobs
+- **Service Agreements**: Create and manage maintenance contracts with customers
+- **Billing Tracking**: Monthly/quarterly/annual billing frequency with amount tracking
+- **Auto-Renewal**: Manual or automatic renewal options
+- **Recurring Jobs**: Schedule recurring services (daily/weekly/monthly/quarterly/annually)
+- **Auto-Dispatch**: Automatically generate dispatches from recurring job schedules
+- **Due Date Tracking**: View and manage overdue recurring jobs
+
+### 🔔 Notifications & Communication
+- **In-App Notifications**: Real-time notification center for all users
+- **Read/Unread Tracking**: Mark individual or all notifications as read
+- **Contextual Alerts**: Notifications linked to specific service calls, invoices, or dispatches
+- **Unread Count**: Badge-style unread notification counter per user
+
+### 🏷️ Tags & Labels
+- **Custom Tags**: Create color-coded tags for organizing data
+- **Multi-Entity Tagging**: Tag customers, dispatches, and service calls
+- **Filter by Tag**: Find related entities quickly through tag lookups
+
 ---
 
 ## 🏗️ Technology Stack
@@ -409,6 +428,14 @@ See [BUILD.md](BUILD.md) for detailed build and deployment instructions.
 - [x] System administration dashboard ✅
 - [x] Remote health monitoring ✅
 - [x] User management panel ✅
+
+### Phase 6: Competitive Feature Parity ✅
+- [x] Service agreements / contracts ✅
+- [x] Recurring jobs with auto-dispatch generation ✅
+- [x] Customer notification system ✅
+- [x] Job & customer tags / labels ✅
+- [x] Shared utility refactoring (code cleanup) ✅
+- [x] Input validation hardening ✅
 
 ---
 

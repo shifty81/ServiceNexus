@@ -199,7 +199,10 @@ function calculateNextDueDate(currentDate, frequency, dayOfWeek, dayOfMonth) {
       break;
     case 'monthly':
       date.setMonth(date.getMonth() + 1);
-      if (dayOfMonth) date.setDate(Math.min(dayOfMonth, new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()));
+      if (dayOfMonth) {
+        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+        date.setDate(Math.min(dayOfMonth, lastDay));
+      }
       break;
     case 'quarterly':
       date.setMonth(date.getMonth() + 3);

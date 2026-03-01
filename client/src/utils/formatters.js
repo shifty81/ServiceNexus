@@ -3,7 +3,7 @@
  */
 
 /**
- * Map a status string to a CSS badge colour class.
+ * Map a status string to a CSS badge color class.
  * @param {string} status
  * @returns {string}
  */

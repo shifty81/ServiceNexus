@@ -143,6 +143,18 @@ describe('Dispatch Routes', () => {
       expect(res.status).toBe(500);
       expect(res.body).toEqual({ error: 'Failed to create dispatch' });
     });
+
+    it('should return 400 when title is missing', async () => {
+      const app = createTestApp();
+
+      const res = await request(app).post('/api/dispatch').send({
+        description: 'No title provided',
+        address: '123 Main St'
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: 'title is required' });
+    });
   });
 
   // PUT /:id
