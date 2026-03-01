@@ -7,7 +7,7 @@ router.get('/customer/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const [serviceCalls, invoices, estimates, equipment] = await Promise.all([
+    const [serviceCalls, invoices, estimates, equipment, feedback] = await Promise.all([
       db.query(
         `SELECT sc.*, u.username as assigned_to_name
          FROM service_calls sc
@@ -43,6 +43,12 @@ router.get('/customer/:userId', async (req, res) => {
          WHERE sc.created_by = ?
          ORDER BY eq.created_at DESC`,
         [userId]
+      ),
+      db.query(
+        `SELECT f.service_call_id FROM feedback f
+         JOIN service_calls sc ON f.service_call_id = sc.id
+         WHERE sc.created_by = ?`,
+        [userId]
       )
     ]);
 
@@ -52,6 +58,8 @@ router.get('/customer/:userId', async (req, res) => {
     const totalOwed = invoices
       .filter(inv => inv.status !== 'paid')
       .reduce((sum, inv) => sum + ((inv.total || 0) - (inv.amount_paid || 0)), 0);
+
+    const ratedServiceCallIds = feedback.map(f => f.service_call_id);
 
     res.json({
       stats: {
@@ -64,7 +72,8 @@ router.get('/customer/:userId', async (req, res) => {
       serviceCalls: serviceCalls.slice(0, 10),
       invoices: invoices.slice(0, 10),
       estimates: estimates.slice(0, 10),
-      equipment: equipment.slice(0, 10)
+      equipment: equipment.slice(0, 10),
+      ratedServiceCallIds
     });
   } catch (error) {
     console.error('Error loading customer portal data:', error);
@@ -77,7 +86,7 @@ router.get('/technician/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const [assignedCalls, dispatches, timeEntries, recentPOs] = await Promise.all([
+    const [assignedCalls, dispatches, timeEntries, recentPOs, feedbackRows, feedbackStats] = await Promise.all([
       db.query(
         `SELECT sc.*, c.contact_name as customer_name, c.phone as customer_phone, c.address as customer_address
          FROM service_calls sc
@@ -115,6 +124,21 @@ router.get('/technician/:userId', async (req, res) => {
          ORDER BY created_at DESC
          LIMIT 5`,
         [userId]
+      ),
+      db.query(
+        `SELECT f.rating, f.comment, f.created_at, sc.title as service_call_title
+         FROM feedback f
+         LEFT JOIN service_calls sc ON f.service_call_id = sc.id
+         WHERE f.technician_id = ?
+         ORDER BY f.created_at DESC
+         LIMIT 5`,
+        [userId]
+      ),
+      db.get(
+        `SELECT COUNT(*) as total_reviews, COALESCE(AVG(rating), 0) as average_rating
+         FROM feedback
+         WHERE technician_id = ?`,
+        [userId]
       )
     ]);
 
@@ -132,19 +156,25 @@ router.get('/technician/:userId', async (req, res) => {
       })
       .reduce((sum, te) => sum + (te.total_hours || 0), 0);
 
+    const avgRating = feedbackStats ? feedbackStats.average_rating : 0;
+    const totalReviews = feedbackStats ? feedbackStats.total_reviews : 0;
+
     res.json({
       stats: {
         activeJobs,
         pendingJobs,
         completedToday,
         todayHours: Math.round(todayHours * 10) / 10,
-        isClockedIn: !!activeTimeEntry
+        isClockedIn: !!activeTimeEntry,
+        averageRating: Math.round(avgRating * 10) / 10,
+        totalReviews
       },
       assignedCalls,
       dispatches: dispatches.slice(0, 10),
       timeEntries,
       recentPOs,
-      activeTimeEntry
+      activeTimeEntry,
+      recentFeedback: feedbackRows
     });
   } catch (error) {
     console.error('Error loading technician portal data:', error);

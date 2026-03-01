@@ -100,6 +100,9 @@ function Navigation({ user, onLogout }) {
               <Link to="/integrations" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Integrations
               </Link>
+              <Link to="/feedback" className="nav-link" onClick={() => setMenuOpen(false)}>
+                Feedback
+              </Link>
               <Link to="/reports" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Reports
               </Link>

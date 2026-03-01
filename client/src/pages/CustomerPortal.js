@@ -19,6 +19,10 @@ function getStepIndex(status) {
 function CustomerPortal({ socket }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [feedbackModal, setFeedbackModal] = useState(null);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const currentUser = JSON.parse(localStorage.getItem('user'));
 
@@ -67,6 +71,33 @@ function CustomerPortal({ socket }) {
     };
     return colors[status] || '#6c757d';
   };
+
+  const handleSubmitFeedback = async () => {
+    if (!feedbackModal || feedbackRating === 0) return;
+    setSubmittingFeedback(true);
+    try {
+      await axios.post('/api/feedback', {
+        service_call_id: feedbackModal.id,
+        technician_id: feedbackModal.assigned_to,
+        rating: feedbackRating,
+        comment: feedbackComment,
+        submitted_by: currentUser.id
+      });
+      setFeedbackModal(null);
+      setFeedbackRating(0);
+      setFeedbackComment('');
+      loadPortalData();
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
+
+  const ratedIds = data?.ratedServiceCallIds || [];
+  const completedUnrated = (data?.serviceCalls || []).filter(
+    c => c.status === 'completed' && !ratedIds.includes(c.id)
+  );
 
   if (loading) {
     return <div className="spinner"></div>;
@@ -141,6 +172,69 @@ function CustomerPortal({ socket }) {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {completedUnrated.length > 0 && (
+          <div className="portal-feedback-prompt">
+            <h2>⭐ Rate Your Service</h2>
+            <p>Let us know how we did!</p>
+            <div className="portal-list">
+              {completedUnrated.map(call => (
+                <div key={call.id} className="portal-list-item portal-feedback-item">
+                  <div className="portal-item-content">
+                    <div className="portal-item-title">{call.title}</div>
+                    {call.assigned_to_name && (
+                      <div className="portal-item-meta"><span>Tech: {call.assigned_to_name}</span></div>
+                    )}
+                  </div>
+                  <button className="btn btn-primary btn-sm" onClick={() => setFeedbackModal(call)}>
+                    Rate ⭐
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {feedbackModal && (
+          <div className="portal-modal-overlay" onClick={() => setFeedbackModal(null)}>
+            <div className="portal-modal" onClick={e => e.stopPropagation()}>
+              <h2>⭐ Rate Service</h2>
+              <p className="portal-modal-subtitle">{feedbackModal.title}</p>
+              <div className="star-rating">
+                {[1, 2, 3, 4, 5].map(star => (
+                  <button
+                    key={star}
+                    className={`star-btn ${feedbackRating >= star ? 'active' : ''}`}
+                    onClick={() => setFeedbackRating(star)}
+                    aria-label={`${star} star${star > 1 ? 's' : ''}`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+              <textarea
+                className="portal-feedback-textarea"
+                placeholder="Tell us about your experience (optional)"
+                value={feedbackComment}
+                onChange={e => setFeedbackComment(e.target.value)}
+                maxLength={1000}
+                rows={3}
+              />
+              <div className="portal-modal-actions">
+                <button className="btn btn-outline" onClick={() => { setFeedbackModal(null); setFeedbackRating(0); setFeedbackComment(''); }}>
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleSubmitFeedback}
+                  disabled={feedbackRating === 0 || submittingFeedback}
+                >
+                  {submittingFeedback ? 'Submitting...' : 'Submit Rating'}
+                </button>
+              </div>
             </div>
           </div>
         )}

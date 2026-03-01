@@ -24,6 +24,7 @@ const integrationsRouter = require('./routes/integrations');
 const apiKeysRouter = require('./routes/apikeys');
 const webhooksRouter = require('./routes/webhooks');
 const portalRouter = require('./routes/portal');
+const feedbackRouter = require('./routes/feedback');
 
 const app = express();
 const server = http.createServer(app);
@@ -65,6 +66,7 @@ app.use('/api/integrations', integrationsRouter);
 app.use('/api/apikeys', apiKeysRouter);
 app.use('/api/webhooks', webhooksRouter);
 app.use('/api/portal', portalRouter);
+app.use('/api/feedback', feedbackRouter);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
