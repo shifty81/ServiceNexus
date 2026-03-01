@@ -6,6 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 const fs = require('fs').promises;
 const rateLimit = require('express-rate-limit');
+const { authenticateToken } = require('../middleware/auth');
 
 // Rate limiter for file upload and deletion operations
 const fileOperationLimiter = rateLimit({
@@ -73,7 +74,7 @@ function extractSerialNumbers(text) {
 }
 
 // Upload picture for service call
-router.post('/upload', upload.single('picture'), async (req, res) => {
+router.post('/upload', authenticateToken, upload.single('picture'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -115,7 +116,7 @@ router.post('/upload', upload.single('picture'), async (req, res) => {
 });
 
 // Get pictures for service call
-router.get('/servicecall/:serviceCallId', async (req, res) => {
+router.get('/servicecall/:serviceCallId', authenticateToken, async (req, res) => {
   try {
     const pictures = await db.query(`
       SELECT p.*, u.username
@@ -133,7 +134,7 @@ router.get('/servicecall/:serviceCallId', async (req, res) => {
 });
 
 // Update picture comment
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { comment } = req.body;
     
@@ -162,7 +163,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete picture
-router.delete('/:id', fileOperationLimiter, async (req, res) => {
+router.delete('/:id', authenticateToken, fileOperationLimiter, async (req, res) => {
   try {
     const picture = await db.get('SELECT * FROM service_call_pictures WHERE id = ?', [req.params.id]);
     
@@ -190,8 +191,16 @@ router.delete('/:id', fileOperationLimiter, async (req, res) => {
 });
 
 // Serve uploaded pictures
-router.get('/view/:filename', fileOperationLimiter, (req, res) => {
-  const filePath = path.join(__dirname, '../../uploads/service-call-pictures', req.params.filename);
+router.get('/view/:filename', authenticateToken, fileOperationLimiter, (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const uploadDir = path.resolve(__dirname, '../../uploads/service-call-pictures');
+  const filePath = path.join(uploadDir, filename);
+
+  // Ensure the resolved path is within the upload directory
+  if (!filePath.startsWith(uploadDir)) {
+    return res.status(400).json({ error: 'Invalid filename' });
+  }
+
   res.sendFile(filePath);
 });
 

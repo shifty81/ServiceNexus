@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Generate invoice number
 const generateInvoiceNumber = async () => {
@@ -15,7 +16,7 @@ const generateInvoiceNumber = async () => {
 };
 
 // Get all invoices
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const invoices = await db.query(`
       SELECT i.*, c.contact_name, c.company_name
@@ -31,7 +32,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single invoice
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const invoice = await db.get(
       `SELECT i.*, c.contact_name, c.company_name, c.email, c.phone, c.address, c.city, c.state, c.zip
@@ -51,7 +52,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new invoice
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       customer_id,
@@ -107,7 +108,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update invoice
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const {
       customer_id,
@@ -162,7 +163,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete invoice
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM invoices WHERE id = ?', [req.params.id]);
     
@@ -178,7 +179,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Record payment
-router.post('/:id/payment', async (req, res) => {
+router.post('/:id/payment', authenticateToken, async (req, res) => {
   try {
     const { amount } = req.body;
 

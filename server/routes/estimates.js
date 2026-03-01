@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Generate estimate number
 const generateEstimateNumber = async () => {
@@ -15,7 +16,7 @@ const generateEstimateNumber = async () => {
 };
 
 // Get all estimates
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const estimates = await db.query(`
       SELECT e.*, c.contact_name, c.company_name
@@ -31,7 +32,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single estimate
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const estimate = await db.get(
       `SELECT e.*, c.contact_name, c.company_name, c.email, c.phone, c.address, c.city, c.state, c.zip
@@ -51,7 +52,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new estimate
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       customer_id,
@@ -107,7 +108,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update estimate
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const {
       customer_id,
@@ -162,7 +163,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete estimate
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM estimates WHERE id = ?', [req.params.id]);
     
@@ -178,7 +179,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Convert estimate to invoice
-router.post('/:id/convert-to-invoice', async (req, res) => {
+router.post('/:id/convert-to-invoice', authenticateToken, async (req, res) => {
   try {
     const estimate = await db.get('SELECT * FROM estimates WHERE id = ?', [req.params.id]);
     

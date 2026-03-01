@@ -3,9 +3,10 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 const { emitEvent, validateRequired } = require('../utils/routeHelpers');
+const { authenticateToken } = require('../middleware/auth');
 
 // Get all recurring jobs
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const jobs = await db.query(`
       SELECT rj.*, c.contact_name, c.company_name,
@@ -23,7 +24,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single recurring job
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const job = await db.get(`
       SELECT rj.*, c.contact_name, c.company_name
@@ -42,7 +43,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create recurring job
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       agreement_id, customer_id, title, description,
@@ -80,7 +81,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update recurring job
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const {
       agreement_id, customer_id, title, description,
@@ -110,7 +111,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete recurring job
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM recurring_jobs WHERE id = ?', [req.params.id]);
     emitEvent(req, 'recurring-job:deleted', req.params.id);
@@ -122,7 +123,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Generate next dispatch from a recurring job (advance the schedule)
-router.post('/:id/generate', async (req, res) => {
+router.post('/:id/generate', authenticateToken, async (req, res) => {
   try {
     const job = await db.get('SELECT * FROM recurring_jobs WHERE id = ?', [req.params.id]);
     if (!job) {
@@ -166,7 +167,7 @@ router.post('/:id/generate', async (req, res) => {
 });
 
 // Get due recurring jobs (jobs whose next_due_date is today or past)
-router.get('/status/due', async (req, res) => {
+router.get('/status/due', authenticateToken, async (req, res) => {
   try {
     const jobs = await db.query(`
       SELECT rj.*, c.contact_name, c.company_name

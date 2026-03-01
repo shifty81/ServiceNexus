@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Get all customers
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const customers = await db.query(`
       SELECT * FROM customers 
@@ -18,7 +19,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single customer
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const customer = await db.get(
       'SELECT * FROM customers WHERE id = ?',
@@ -35,7 +36,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new customer
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       company_name,
@@ -81,7 +82,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update customer
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const {
       company_name,
@@ -125,7 +126,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete customer
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM customers WHERE id = ?', [req.params.id]);
     
@@ -142,7 +143,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Search customers
-router.get('/search/:query', async (req, res) => {
+router.get('/search/:query', authenticateToken, async (req, res) => {
   try {
     const query = `%${req.params.query}%`;
     const customers = await db.query(`

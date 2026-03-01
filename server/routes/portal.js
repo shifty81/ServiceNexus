@@ -1,11 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Customer portal dashboard data
-router.get('/customer/:userId', async (req, res) => {
+router.get('/customer/:userId', authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
+
+    // Users can only access their own portal data (admins can access any)
+    if (req.user.id !== userId && req.user.role !== 'admin' && req.user.user_type !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
     const [serviceCalls, invoices, estimates, equipment, feedback] = await Promise.all([
       db.query(
@@ -82,9 +88,14 @@ router.get('/customer/:userId', async (req, res) => {
 });
 
 // Technician portal dashboard data
-router.get('/technician/:userId', async (req, res) => {
+router.get('/technician/:userId', authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
+
+    // Users can only access their own portal data (admins can access any)
+    if (req.user.id !== userId && req.user.role !== 'admin' && req.user.user_type !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
     const [assignedCalls, dispatches, timeEntries, recentPOs, feedbackRows, feedbackStats] = await Promise.all([
       db.query(

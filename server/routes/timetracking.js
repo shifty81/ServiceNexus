@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Helper function to calculate hours and pay
 const calculateHoursAndPay = (clockIn, clockOut, breakDuration, hourlyRate) => {
@@ -19,7 +20,7 @@ const calculateHoursAndPay = (clockIn, clockOut, breakDuration, hourlyRate) => {
 };
 
 // Get all time entries with user information
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const entries = await db.query(
       `SELECT te.*, u.username, u.email 
@@ -35,7 +36,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get currently active (clocked in) entries
-router.get('/active', async (req, res) => {
+router.get('/active', authenticateToken, async (req, res) => {
   try {
     const activeEntries = await db.query(
       `SELECT te.*, u.username, u.email 
@@ -52,7 +53,7 @@ router.get('/active', async (req, res) => {
 });
 
 // Get time entries for a specific user
-router.get('/user/:userId', async (req, res) => {
+router.get('/user/:userId', authenticateToken, async (req, res) => {
   try {
     const entries = await db.query(
       `SELECT te.*, u.username, u.email 
@@ -70,7 +71,7 @@ router.get('/user/:userId', async (req, res) => {
 });
 
 // Get payroll summary by user and date range
-router.get('/payroll', async (req, res) => {
+router.get('/payroll', authenticateToken, async (req, res) => {
   try {
     const { startDate, endDate, userId } = req.query;
     
@@ -116,7 +117,7 @@ router.get('/payroll', async (req, res) => {
 });
 
 // Clock in (create new entry with clock_in time)
-router.post('/clock-in', async (req, res) => {
+router.post('/clock-in', authenticateToken, async (req, res) => {
   try {
     const { user_id, hourly_rate, notes, dispatch_id } = req.body;
     
@@ -166,7 +167,7 @@ router.post('/clock-in', async (req, res) => {
 });
 
 // Clock out (update entry with clock_out, calculate hours and pay)
-router.post('/clock-out/:id', async (req, res) => {
+router.post('/clock-out/:id', authenticateToken, async (req, res) => {
   try {
     const { break_duration } = req.body;
     const entryId = req.params.id;
@@ -216,7 +217,7 @@ router.post('/clock-out/:id', async (req, res) => {
 });
 
 // Update time entry (for corrections)
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const {
       clock_in,
@@ -288,7 +289,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete time entry
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const entry = await db.get('SELECT * FROM time_entries WHERE id = ?', [req.params.id]);
     

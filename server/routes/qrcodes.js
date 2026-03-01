@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Generate QR code for customer location
-router.post('/generate', async (req, res) => {
+router.post('/generate', authenticateToken, async (req, res) => {
   try {
     const { customer_id, location_name } = req.body;
     const id = uuidv4();
@@ -25,7 +26,7 @@ router.post('/generate', async (req, res) => {
 });
 
 // Get QR codes for a customer
-router.get('/customer/:customerId', async (req, res) => {
+router.get('/customer/:customerId', authenticateToken, async (req, res) => {
   try {
     const qrCodes = await db.query(
       'SELECT * FROM qr_codes WHERE customer_id = ? AND is_active = 1 ORDER BY created_at DESC',
@@ -39,7 +40,7 @@ router.get('/customer/:customerId', async (req, res) => {
 });
 
 // Validate QR code
-router.post('/validate', async (req, res) => {
+router.post('/validate', authenticateToken, async (req, res) => {
   try {
     const { qr_code_data } = req.body;
     
@@ -62,7 +63,7 @@ router.post('/validate', async (req, res) => {
 });
 
 // Deactivate QR code
-router.put('/:id/deactivate', async (req, res) => {
+router.put('/:id/deactivate', authenticateToken, async (req, res) => {
   try {
     await db.run('UPDATE qr_codes SET is_active = 0 WHERE id = ?', [req.params.id]);
     res.json({ success: true });
@@ -73,7 +74,7 @@ router.put('/:id/deactivate', async (req, res) => {
 });
 
 // Check in - Technician arrives at location
-router.post('/checkin', async (req, res) => {
+router.post('/checkin', authenticateToken, async (req, res) => {
   try {
     const { service_call_id, technician_id, qr_code_id, location_latitude, location_longitude, notes } = req.body;
     const id = uuidv4();
@@ -120,7 +121,7 @@ router.post('/checkin', async (req, res) => {
 });
 
 // Check out - Technician leaves location
-router.post('/checkout/:checkInId', async (req, res) => {
+router.post('/checkout/:checkInId', authenticateToken, async (req, res) => {
   try {
     const { notes } = req.body;
 
@@ -151,7 +152,7 @@ router.post('/checkout/:checkInId', async (req, res) => {
 });
 
 // Get active check-in for technician
-router.get('/active/:technicianId', async (req, res) => {
+router.get('/active/:technicianId', authenticateToken, async (req, res) => {
   try {
     const checkIn = await db.get(`
       SELECT ci.*, u.username as technician_name, sc.title as service_call_title
@@ -171,7 +172,7 @@ router.get('/active/:technicianId', async (req, res) => {
 });
 
 // Get check-ins for service call
-router.get('/servicecall/:serviceCallId', async (req, res) => {
+router.get('/servicecall/:serviceCallId', authenticateToken, async (req, res) => {
   try {
     const checkIns = await db.query(`
       SELECT ci.*, u.username as technician_name

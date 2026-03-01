@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 const LOW_STOCK_THRESHOLD = 5;
 
 // Get comprehensive analytics dashboard
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const [
       revenue,

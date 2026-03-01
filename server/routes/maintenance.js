@@ -2,13 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 const UPCOMING_MAINTENANCE_DAYS = 7;
 const PREDICTIVE_ANALYSIS_DAYS = 90;
 const PREDICTIVE_ALERT_THRESHOLD = 3;
 
 // Get all maintenance schedules with equipment and customer info
-router.get('/schedules', async (req, res) => {
+router.get('/schedules', authenticateToken, async (req, res) => {
   try {
     const schedules = await db.query(`
       SELECT ms.*,
@@ -31,7 +32,7 @@ router.get('/schedules', async (req, res) => {
 });
 
 // Create a maintenance schedule
-router.post('/schedules', async (req, res) => {
+router.post('/schedules', authenticateToken, async (req, res) => {
   try {
     const { equipment_id, schedule_type, frequency_days, last_service_date, description, created_by } = req.body;
 
@@ -76,7 +77,7 @@ router.post('/schedules', async (req, res) => {
 });
 
 // Update a maintenance schedule
-router.put('/schedules/:id', async (req, res) => {
+router.put('/schedules/:id', authenticateToken, async (req, res) => {
   try {
     const { equipment_id, schedule_type, frequency_days, last_service_date, next_service_date, description, is_active } = req.body;
 
@@ -109,7 +110,7 @@ router.put('/schedules/:id', async (req, res) => {
 });
 
 // Delete a maintenance schedule
-router.delete('/schedules/:id', async (req, res) => {
+router.delete('/schedules/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM maintenance_schedules WHERE id = ?', [req.params.id]);
 
@@ -125,7 +126,7 @@ router.delete('/schedules/:id', async (req, res) => {
 });
 
 // Get all maintenance alerts with optional filters
-router.get('/alerts', async (req, res) => {
+router.get('/alerts', authenticateToken, async (req, res) => {
   try {
     const { status, severity } = req.query;
     let sql = `
@@ -162,7 +163,7 @@ router.get('/alerts', async (req, res) => {
 });
 
 // Update alert status (acknowledge, resolve, dismiss)
-router.put('/alerts/:id', async (req, res) => {
+router.put('/alerts/:id', authenticateToken, async (req, res) => {
   try {
     const { status, resolved_by } = req.body;
 
@@ -192,7 +193,7 @@ router.put('/alerts/:id', async (req, res) => {
 });
 
 // Generate alerts by scanning active maintenance schedules
-router.post('/generate-alerts', async (req, res) => {
+router.post('/generate-alerts', authenticateToken, async (req, res) => {
   try {
     const now = new Date();
     const sevenDaysFromNow = new Date(now);
@@ -302,7 +303,7 @@ router.post('/generate-alerts', async (req, res) => {
 });
 
 // Dashboard summary
-router.get('/dashboard', async (req, res) => {
+router.get('/dashboard', authenticateToken, async (req, res) => {
   try {
     const equipmentCount = await db.get('SELECT COUNT(*) as count FROM equipment');
     const activeSchedules = await db.get('SELECT COUNT(*) as count FROM maintenance_schedules WHERE is_active = 1');

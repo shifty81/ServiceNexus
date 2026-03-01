@@ -3,9 +3,10 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 const { emitEvent, validateRequired } = require('../utils/routeHelpers');
+const { authenticateToken } = require('../middleware/auth');
 
 // Get all service agreements
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const agreements = await db.query(`
       SELECT sa.*, c.contact_name, c.company_name
@@ -21,7 +22,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single service agreement
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const agreement = await db.get(`
       SELECT sa.*, c.contact_name, c.company_name
@@ -40,7 +41,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create service agreement
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       customer_id, title, description, type,
@@ -78,7 +79,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update service agreement
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const {
       customer_id, title, description, type, status,
@@ -109,7 +110,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete service agreement
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM service_agreements WHERE id = ?', [req.params.id]);
     emitEvent(req, 'agreement:deleted', req.params.id);
@@ -121,7 +122,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Get agreements for a specific customer
-router.get('/customer/:customerId', async (req, res) => {
+router.get('/customer/:customerId', authenticateToken, async (req, res) => {
   try {
     const agreements = await db.query(
       'SELECT * FROM service_agreements WHERE customer_id = ? ORDER BY created_at DESC',

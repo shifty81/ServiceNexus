@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Get equipment for service call
-router.get('/servicecall/:serviceCallId', async (req, res) => {
+router.get('/servicecall/:serviceCallId', authenticateToken, async (req, res) => {
   try {
     const equipment = await db.query(
       'SELECT * FROM equipment WHERE service_call_id = ? ORDER BY created_at DESC',
@@ -18,7 +19,7 @@ router.get('/servicecall/:serviceCallId', async (req, res) => {
 });
 
 // Get equipment for customer
-router.get('/customer/:customerId', async (req, res) => {
+router.get('/customer/:customerId', authenticateToken, async (req, res) => {
   try {
     const equipment = await db.query(
       'SELECT * FROM equipment WHERE customer_id = ? ORDER BY created_at DESC',
@@ -32,7 +33,7 @@ router.get('/customer/:customerId', async (req, res) => {
 });
 
 // Add equipment
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { service_call_id, customer_id, name, serial_number, model, manufacturer, location_details, notes } = req.body;
     const id = uuidv4();
@@ -58,7 +59,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update equipment
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { name, serial_number, model, manufacturer, location_details, notes } = req.body;
 
@@ -84,7 +85,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete equipment
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM equipment WHERE id = ?', [req.params.id]);
     

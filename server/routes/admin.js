@@ -1,32 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
-const os = require('os');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
-// GET /api/admin/health - System health for remote monitoring (public for monitoring tools)
+// GET /api/admin/health - System health check (public but limited info; full details require admin)
 router.get('/health', async (req, res) => {
   try {
     const dbCheck = await db.get('SELECT 1 AS ok');
-    const tables = await db.query(
-      "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-    );
 
-    res.json({
+    const healthData = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      database: dbCheck ? 'connected' : 'error',
-      tables: tables.map(t => t.name),
-      environment: process.env.NODE_ENV || 'development',
-      nodeVersion: process.version,
-      platform: os.platform(),
-      memory: {
-        total: os.totalmem(),
-        free: os.freemem(),
-        usage: process.memoryUsage()
-      }
-    });
+      database: dbCheck ? 'connected' : 'error'
+    };
+
+    res.json(healthData);
   } catch (error) {
     console.error('Health check error:', error);
     res.status(503).json({ status: 'unhealthy', error: 'System health check failed' });
