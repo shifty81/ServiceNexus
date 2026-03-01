@@ -454,6 +454,95 @@ const initialize = () => {
           FOREIGN KEY (technician_id) REFERENCES users(id),
           FOREIGN KEY (submitted_by) REFERENCES users(id)
         )
+      `);
+
+      // Service agreements / contracts
+      db.run(`
+        CREATE TABLE IF NOT EXISTS service_agreements (
+          id TEXT PRIMARY KEY,
+          customer_id TEXT NOT NULL,
+          title TEXT NOT NULL,
+          description TEXT,
+          type TEXT DEFAULT 'maintenance',
+          status TEXT DEFAULT 'active',
+          start_date TEXT NOT NULL,
+          end_date TEXT,
+          renewal_type TEXT DEFAULT 'manual',
+          billing_frequency TEXT DEFAULT 'monthly',
+          billing_amount REAL DEFAULT 0,
+          terms TEXT,
+          created_by TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (customer_id) REFERENCES customers(id),
+          FOREIGN KEY (created_by) REFERENCES users(id)
+        )
+      `);
+
+      // Recurring jobs linked to service agreements
+      db.run(`
+        CREATE TABLE IF NOT EXISTS recurring_jobs (
+          id TEXT PRIMARY KEY,
+          agreement_id TEXT,
+          customer_id TEXT NOT NULL,
+          title TEXT NOT NULL,
+          description TEXT,
+          frequency TEXT NOT NULL DEFAULT 'monthly',
+          day_of_week INTEGER,
+          day_of_month INTEGER,
+          next_due_date TEXT NOT NULL,
+          assigned_to TEXT,
+          priority TEXT DEFAULT 'normal',
+          status TEXT DEFAULT 'active',
+          last_generated_at DATETIME,
+          created_by TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (agreement_id) REFERENCES service_agreements(id),
+          FOREIGN KEY (customer_id) REFERENCES customers(id),
+          FOREIGN KEY (assigned_to) REFERENCES users(id),
+          FOREIGN KEY (created_by) REFERENCES users(id)
+        )
+      `);
+
+      // Customer notifications / communication log
+      db.run(`
+        CREATE TABLE IF NOT EXISTS notifications (
+          id TEXT PRIMARY KEY,
+          customer_id TEXT,
+          user_id TEXT,
+          type TEXT NOT NULL,
+          channel TEXT DEFAULT 'in_app',
+          subject TEXT,
+          message TEXT NOT NULL,
+          related_type TEXT,
+          related_id TEXT,
+          is_read INTEGER DEFAULT 0,
+          sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (customer_id) REFERENCES customers(id),
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+      `);
+
+      // Tags for customers, jobs, and dispatches
+      db.run(`
+        CREATE TABLE IF NOT EXISTS tags (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL UNIQUE,
+          color TEXT DEFAULT '#6366f1',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Many-to-many link between tags and entities
+      db.run(`
+        CREATE TABLE IF NOT EXISTS tag_assignments (
+          id TEXT PRIMARY KEY,
+          tag_id TEXT NOT NULL,
+          entity_type TEXT NOT NULL,
+          entity_id TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (tag_id) REFERENCES tags(id)
+        )
       `, (err) => {
         if (err) reject(err);
         else {

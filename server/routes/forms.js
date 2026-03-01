@@ -5,6 +5,7 @@ const db = require('../database');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { safeJsonParse } = require('../utils/routeHelpers');
 
 // Configure multer for document uploads
 const storage = multer.diskStorage({
@@ -45,8 +46,8 @@ router.get('/', async (req, res) => {
     const forms = await db.query('SELECT * FROM forms ORDER BY created_at DESC');
     res.json(forms.map(form => ({
       ...form,
-      fields: JSON.parse(form.fields),
-      field_positions: form.field_positions ? JSON.parse(form.field_positions) : null
+      fields: safeJsonParse(form.fields, []),
+      field_positions: form.field_positions ? safeJsonParse(form.field_positions) : null
     })));
   } catch (error) {
     console.error('Error fetching forms:', error);
@@ -63,8 +64,8 @@ router.get('/:id', async (req, res) => {
     }
     res.json({
       ...form,
-      fields: JSON.parse(form.fields),
-      field_positions: form.field_positions ? JSON.parse(form.field_positions) : null
+      fields: safeJsonParse(form.fields, []),
+      field_positions: form.field_positions ? safeJsonParse(form.field_positions) : null
     });
   } catch (error) {
     console.error('Error fetching form:', error);
@@ -95,10 +96,10 @@ router.post('/', upload.single('document'), async (req, res) => {
       id, 
       title, 
       description, 
-      fields: JSON.parse(fields),
+      fields: safeJsonParse(fields, []),
       uploaded_file_path: filePath,
       uploaded_file_type: fileType,
-      field_positions: field_positions ? JSON.parse(field_positions) : null
+      field_positions: field_positions ? safeJsonParse(field_positions) : null
     });
   } catch (error) {
     console.error('Error creating form:', error);
@@ -133,10 +134,10 @@ router.put('/:id', upload.single('document'), async (req, res) => {
       id: req.params.id, 
       title, 
       description, 
-      fields: JSON.parse(fields),
+      fields: safeJsonParse(fields, []),
       uploaded_file_path: filePath,
       uploaded_file_type: fileType,
-      field_positions: field_positions ? JSON.parse(field_positions) : null
+      field_positions: field_positions ? safeJsonParse(field_positions) : null
     });
   } catch (error) {
     console.error('Error updating form:', error);
@@ -193,7 +194,7 @@ router.get('/:id/submissions', async (req, res) => {
     );
     res.json(submissions.map(sub => ({
       ...sub,
-      data: JSON.parse(sub.data)
+      data: safeJsonParse(sub.data, {})
     })));
   } catch (error) {
     console.error('Error fetching submissions:', error);

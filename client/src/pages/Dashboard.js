@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { getStatusColor, formatTimeAgo } from '../utils/formatters';
 import './Dashboard.css';
 
 function Dashboard({ socket }) {
@@ -215,25 +216,6 @@ function Dashboard({ socket }) {
       </div>
     </div>
   );
-}
-
-function formatTimeAgo(date) {
-  const seconds = Math.floor((new Date() - date) / 1000);
-  
-  if (seconds < 60) return 'Just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(seconds / 86400)}d ago`;
-}
-
-function getStatusColor(status) {
-  const colors = {
-    pending: 'warning',
-    'in-progress': 'primary',
-    completed: 'success',
-    cancelled: 'danger'
-  };
-  return colors[status] || 'primary';
 }
 
 export default Dashboard;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getStatusColor, getPriorityIcon } from '../utils/formatters';
 import './Dispatch.css';
 
 function Dispatch({ socket }) {
@@ -134,26 +135,6 @@ function Dispatch({ socket }) {
       // Desktop - open Google Maps
       window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
     }
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: 'warning',
-      'in-progress': 'primary',
-      completed: 'success',
-      cancelled: 'danger'
-    };
-    return colors[status] || 'primary';
-  };
-
-  const getPriorityIcon = (priority) => {
-    const icons = {
-      low: '🟢',
-      normal: '🟡',
-      high: '🟠',
-      urgent: '🔴'
-    };
-    return icons[priority] || '🟡';
   };
 
   if (loading) return <div className="spinner"></div>;
