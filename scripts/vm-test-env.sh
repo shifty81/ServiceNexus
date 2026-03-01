@@ -44,7 +44,15 @@ while [[ $# -gt 0 ]]; do
     --no-build)   NO_BUILD=true;   shift ;;
     --keep)       KEEP=true;       shift ;;
     --help|-h)
-      head -18 "$0" | tail -12
+      cat <<'HELP'
+Usage: ./scripts/vm-test-env.sh [options]
+
+Options:
+  --build-only    Build images but do not start the environment
+  --no-build      Skip the image build step (use existing images)
+  --keep          Do not tear down the environment after tests finish
+  --help          Show this help message
+HELP
       exit 0
       ;;
     *) error_msg "Unknown option: $1"; exit 1 ;;
@@ -129,9 +137,9 @@ if [ "$EXIT_CODE" -eq 0 ]; then
   echo -e "${GREEN}║   All device simulations passed! 🎉               ║${NC}"
   echo -e "${GREEN}╚════════════════════════════════════════════════════╝${NC}"
 else
-  echo -e "${RED}╔════════════════════════════════════════════════════╗${NC}"
-  echo -e "${RED}║   One or more device simulations failed (exit $EXIT_CODE)  ║${NC}"
-  echo -e "${RED}╚════════════════════════════════════════════════════╝${NC}"
+  printf "${RED}╔════════════════════════════════════════════════════╗${NC}\n"
+  printf "${RED}║   One or more device simulations failed (exit %-3s) ║${NC}\n" "$EXIT_CODE"
+  printf "${RED}╚════════════════════════════════════════════════════╝${NC}\n"
 fi
 echo ""
 
