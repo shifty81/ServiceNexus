@@ -5,6 +5,8 @@ Complete guide for building the ServiceNexus application for development and pro
 ## 📋 Table of Contents
 
 - [Automated Build (Windows PowerShell)](#automated-build-windows-powershell)
+- [Automated Build (Linux / macOS)](#automated-build-linux--macos)
+- [VM Test Environment](#vm-test-environment)
 - [Prerequisites](#prerequisites)
 - [Development Build](#development-build)
 - [Production Build](#production-build)
@@ -134,6 +136,124 @@ cd path\to\ServiceNexus
 - Ensure Node.js is installed from https://nodejs.org/
 - Restart PowerShell after installation
 - Verify with: `node --version`
+
+---
+
+## Automated Build (Linux / macOS)
+
+### 🚀 One-Command Build
+
+For Linux and macOS users, we provide a Bash build script equivalent to the PowerShell script:
+
+```bash
+# Make it executable (first time only)
+chmod +x build.sh
+
+# Run the automated build script
+./build.sh
+```
+
+#### Build Script Options
+
+```bash
+# Build and start development servers immediately
+./build.sh --start-dev
+
+# Build for production deployment
+./build.sh --production
+
+# Skip dependency installation (if already installed)
+./build.sh --skip-install
+
+# Skip prerequisite checks
+./build.sh --skip-prereq-check
+
+# Skip the build step (install dependencies only)
+./build.sh --skip-build
+
+# Combine options
+./build.sh --skip-install --start-dev
+```
+
+---
+
+## VM Test Environment
+
+The VM test environment uses Docker Compose to spin up the ServiceNexus server alongside
+multiple simulated device containers (mobile, desktop, tablet). Each device runs a
+Node.js simulator that registers a user, authenticates, and exercises platform APIs
+according to its role (technician, dispatcher, admin).
+
+### Prerequisites
+
+- **Docker** and **Docker Compose** must be installed.
+
+### Quick Start
+
+```bash
+# Run the full multi-device simulation
+chmod +x scripts/vm-test-env.sh
+./scripts/vm-test-env.sh
+```
+
+This will:
+1. Build the ServiceNexus Docker image
+2. Start the server container with a health check
+3. Launch three device simulators (mobile, desktop, tablet)
+4. Run API interactions against the platform
+5. Report pass/fail results per device
+6. Tear down the environment automatically
+
+### Options
+
+```bash
+# Build images only (skip running the simulation)
+./scripts/vm-test-env.sh --build-only
+
+# Skip image build (use previously built images)
+./scripts/vm-test-env.sh --no-build
+
+# Keep containers running after tests finish
+./scripts/vm-test-env.sh --keep
+```
+
+### Docker Compose Configuration
+
+The test environment is defined in `docker-compose.test.yml`:
+
+| Service              | Role        | Description                                |
+|----------------------|-------------|--------------------------------------------|
+| servicenexus-server  | Platform    | The ServiceNexus application under test    |
+| device-mobile        | Technician  | Simulates a field technician on mobile     |
+| device-desktop       | Dispatcher  | Simulates an office dispatcher on desktop  |
+| device-tablet        | Admin       | Simulates an admin/supervisor on a tablet  |
+
+### CI Integration
+
+The simulation runs automatically in GitHub Actions via `.github/workflows/vm-test.yml`
+on every push and pull request to `main` or `develop`. Logs are uploaded as workflow
+artifacts for debugging.
+
+### Adding More Devices
+
+To simulate additional devices, add a new service to `docker-compose.test.yml`:
+
+```yaml
+device-extra:
+  image: node:18-alpine
+  working_dir: /app
+  volumes:
+    - ./scripts/device-simulator.js:/app/device-simulator.js:ro
+  depends_on:
+    servicenexus-server:
+      condition: service_healthy
+  environment:
+    - SERVER_URL=http://servicenexus-server:3001
+    - DEVICE_ROLE=technician
+    - DEVICE_NAME=extra-device-1
+    - SIMULATE_COUNT=5
+  command: ["node", "/app/device-simulator.js"]
+```
 
 ---
 

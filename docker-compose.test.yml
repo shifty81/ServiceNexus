@@ -1,0 +1,90 @@
+###############################################################################
+# ServiceNexus – VM Test Environment
+#
+# Spins up a ServiceNexus server together with multiple simulated "device"
+# containers so that cross-device interactions (API calls, WebSocket events)
+# can be exercised in an isolated, reproducible environment.
+#
+# Usage:
+#   docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
+#
+#   Or via the helper script:
+#   ./scripts/vm-test-env.sh
+###############################################################################
+version: '3.8'
+
+services:
+  # ── Core ServiceNexus application ──────────────────────────────────
+  servicenexus-server:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=test
+      - PORT=3001
+      - JWT_SECRET=vm-test-secret-key-for-testing-only
+      - CORS_ORIGIN=*
+      - TRUST_PROXY=false
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX=1000
+    volumes:
+      - test-data:/app/data
+      - test-uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/forms", "||", "exit", "1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # ── Simulated field-technician device (mobile) ─────────────────────
+  device-mobile:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./scripts/device-simulator.js:/app/device-simulator.js:ro
+    depends_on:
+      servicenexus-server:
+        condition: service_healthy
+    environment:
+      - SERVER_URL=http://servicenexus-server:3001
+      - DEVICE_ROLE=technician
+      - DEVICE_NAME=mobile-tech-1
+      - SIMULATE_COUNT=5
+    command: ["node", "/app/device-simulator.js"]
+
+  # ── Simulated office / dispatcher device (desktop) ─────────────────
+  device-desktop:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./scripts/device-simulator.js:/app/device-simulator.js:ro
+    depends_on:
+      servicenexus-server:
+        condition: service_healthy
+    environment:
+      - SERVER_URL=http://servicenexus-server:3001
+      - DEVICE_ROLE=dispatcher
+      - DEVICE_NAME=desktop-dispatch-1
+      - SIMULATE_COUNT=5
+    command: ["node", "/app/device-simulator.js"]
+
+  # ── Simulated tablet device (supervisor / inspector) ───────────────
+  device-tablet:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./scripts/device-simulator.js:/app/device-simulator.js:ro
+    depends_on:
+      servicenexus-server:
+        condition: service_healthy
+    environment:
+      - SERVER_URL=http://servicenexus-server:3001
+      - DEVICE_ROLE=admin
+      - DEVICE_NAME=tablet-admin-1
+      - SIMULATE_COUNT=5
+    command: ["node", "/app/device-simulator.js"]
+
+volumes:
+  test-data:
+  test-uploads:
