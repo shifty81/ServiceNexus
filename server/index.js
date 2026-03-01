@@ -31,6 +31,7 @@ const analyticsRouter = require('./routes/analytics');
 const adminRouter = require('./routes/admin');
 const apidocsRouter = require('./routes/apidocs');
 const routingRouter = require('./routes/routing');
+const maintenanceRouter = require('./routes/maintenance');
 
 const app = express();
 const server = http.createServer(app);
@@ -101,6 +102,7 @@ app.use('/api/analytics', analyticsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/docs', apidocsRouter);
 app.use('/api/routing', routingRouter);
+app.use('/api/maintenance', maintenanceRouter);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {

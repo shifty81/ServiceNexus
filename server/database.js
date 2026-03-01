@@ -391,6 +391,46 @@ const initialize = () => {
         )
       `);
 
+      // Maintenance schedules for predictive maintenance
+      db.run(`
+        CREATE TABLE IF NOT EXISTS maintenance_schedules (
+          id TEXT PRIMARY KEY,
+          equipment_id TEXT NOT NULL,
+          schedule_type TEXT NOT NULL,
+          frequency_days INTEGER NOT NULL,
+          last_service_date DATETIME,
+          next_service_date DATETIME,
+          description TEXT,
+          is_active INTEGER DEFAULT 1,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          created_by TEXT,
+          FOREIGN KEY (equipment_id) REFERENCES equipment(id),
+          FOREIGN KEY (created_by) REFERENCES users(id)
+        )
+      `);
+
+      // Maintenance alerts for predictive maintenance
+      db.run(`
+        CREATE TABLE IF NOT EXISTS maintenance_alerts (
+          id TEXT PRIMARY KEY,
+          equipment_id TEXT NOT NULL,
+          schedule_id TEXT,
+          alert_type TEXT NOT NULL,
+          severity TEXT DEFAULT 'medium',
+          title TEXT NOT NULL,
+          description TEXT,
+          due_date DATETIME,
+          status TEXT DEFAULT 'active',
+          resolved_at DATETIME,
+          resolved_by TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (equipment_id) REFERENCES equipment(id),
+          FOREIGN KEY (schedule_id) REFERENCES maintenance_schedules(id),
+          FOREIGN KEY (resolved_by) REFERENCES users(id)
+        )
+      `);
+
       // Customer feedback / ratings for completed service calls
       db.run(`
         CREATE TABLE IF NOT EXISTS feedback (
