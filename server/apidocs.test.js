@@ -105,7 +105,7 @@ describe('API Docs', () => {
       expect(response.status).toBe(200);
       const groupNames = Object.keys(response.body.groups);
       expect(groupNames).toContain('Recurring Jobs');
-      expect(response.body.groups['Recurring Jobs'].length).toBeGreaterThanOrEqual(6);
+      expect(response.body.groups['Recurring Jobs'].length).toBeGreaterThanOrEqual(7);
     });
 
     test('should include Notifications group', async () => {
@@ -121,7 +121,7 @@ describe('API Docs', () => {
       expect(response.status).toBe(200);
       const groupNames = Object.keys(response.body.groups);
       expect(groupNames).toContain('Tags');
-      expect(response.body.groups['Tags'].length).toBeGreaterThanOrEqual(6);
+      expect(response.body.groups['Tags'].length).toBeGreaterThanOrEqual(8);
     });
   });
 
