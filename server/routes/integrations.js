@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const db = require('../database');
 const rateLimit = require('express-rate-limit');
 const { authenticateToken } = require('../middleware/auth');
+const { getConnector } = require('../connectors');
 
 // Rate limiter for integration operations
 const integrationLimiter = rateLimit({
@@ -157,24 +158,13 @@ router.post('/:id/test', async (req, res) => {
     const credentials = integration.credentials ? JSON.parse(integration.credentials) : {};
     const config = integration.config ? JSON.parse(integration.config) : {};
 
-    // Test connection based on integration type
-    let testResult = { success: false, message: 'Not implemented' };
-
-    switch (integration.type) {
-      case 'quickbooks':
-        testResult = await testQuickBooksConnection(credentials, config);
-        break;
-      case 'salesforce':
-        testResult = await testSalesforceConnection(credentials, config);
-        break;
-      case 'google':
-        testResult = await testGoogleConnection(credentials, config);
-        break;
-      case 'procore':
-        testResult = await testProcoreConnection(credentials, config);
-        break;
-      default:
-        testResult = { success: false, message: 'Unknown integration type' };
+    // Test connection using the appropriate connector
+    const connector = getConnector(integration.type);
+    let testResult;
+    if (connector) {
+      testResult = await connector.testConnection(credentials, config);
+    } else {
+      testResult = { success: false, message: 'Unknown integration type' };
     }
 
     // Update integration status based on test
@@ -214,18 +204,43 @@ router.post('/:id/sync', async (req, res) => {
       [syncLogId, req.params.id, 'manual', 'running']
     );
 
-    // Trigger sync in background (would be a separate service in production)
-    // For now, we'll just return the sync log ID
-    res.json({ 
-      message: 'Sync started',
-      syncLogId: syncLogId
-    });
+    // Run sync through connector
+    const connector = getConnector(integration.type);
+    let syncResult;
+    if (connector) {
+      try {
+        syncResult = await connector.sync(integration, db);
+      } catch (err) {
+        syncResult = { success: false, records_processed: 0, records_succeeded: 0, records_failed: 0, error: err.message };
+      }
+    } else {
+      syncResult = { success: false, records_processed: 0, records_succeeded: 0, records_failed: 0, error: 'Unknown integration type' };
+    }
+
+    // Update sync log with results
+    await db.run(
+      `UPDATE integration_sync_logs SET status = ?, records_processed = ?, records_succeeded = ?, records_failed = ?, error_details = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [
+        syncResult.success ? 'completed' : 'failed',
+        syncResult.records_processed || 0,
+        syncResult.records_succeeded || 0,
+        syncResult.records_failed || 0,
+        syncResult.error || null,
+        syncLogId
+      ]
+    );
 
     // Update last sync time
     await db.run(
-      `UPDATE integrations SET last_sync = CURRENT_TIMESTAMP WHERE id = ?`,
-      [req.params.id]
+      `UPDATE integrations SET last_sync = CURRENT_TIMESTAMP, sync_status = ? WHERE id = ?`,
+      [syncResult.success ? 'healthy' : 'error', req.params.id]
     );
+
+    res.json({
+      message: syncResult.success ? 'Sync completed successfully' : 'Sync completed with errors',
+      syncLogId,
+      ...syncResult
+    });
 
   } catch (error) {
     console.error('Error triggering sync:', error);
@@ -273,26 +288,5 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete integration' });
   }
 });
-
-// Placeholder test functions (to be implemented with actual API clients)
-async function testQuickBooksConnection(credentials, config) {
-  // TODO: Implement QuickBooks OAuth connection test
-  return { success: false, message: 'QuickBooks connection test not yet implemented' };
-}
-
-async function testSalesforceConnection(credentials, config) {
-  // TODO: Implement Salesforce OAuth connection test
-  return { success: false, message: 'Salesforce connection test not yet implemented' };
-}
-
-async function testGoogleConnection(credentials, config) {
-  // TODO: Implement Google OAuth connection test
-  return { success: false, message: 'Google connection test not yet implemented' };
-}
-
-async function testProcoreConnection(credentials, config) {
-  // TODO: Implement Procore API connection test
-  return { success: false, message: 'Procore connection test not yet implemented' };
-}
 
 module.exports = router;
