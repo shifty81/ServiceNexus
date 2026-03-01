@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -23,6 +27,8 @@ jest.mock('uuid', () => ({
 }));
 
 const serviceCallsRouter = require('./routes/servicecalls');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -56,7 +62,8 @@ describe('Service Calls API', () => {
       ];
       mockDb.query.mockResolvedValue(mockServiceCalls);
 
-      const response = await request(app).get('/api/servicecalls');
+      const response = await request(app).get('/api/servicecalls')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -66,7 +73,8 @@ describe('Service Calls API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/servicecalls');
+      const response = await request(app).get('/api/servicecalls')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch service calls');
     });
@@ -87,7 +95,8 @@ describe('Service Calls API', () => {
         .mockResolvedValueOnce(mockEquipment)
         .mockResolvedValueOnce(mockCheckIns);
 
-      const response = await request(app).get('/api/servicecalls/sc-1');
+      const response = await request(app).get('/api/servicecalls/sc-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.title).toBe('Fix AC');
       expect(response.body.comments).toEqual(mockComments);
@@ -99,7 +108,8 @@ describe('Service Calls API', () => {
     test('should return 404 when service call not found', async () => {
       mockDb.get.mockResolvedValue(undefined);
 
-      const response = await request(app).get('/api/servicecalls/nonexistent');
+      const response = await request(app).get('/api/servicecalls/nonexistent')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Service call not found');
     });
@@ -107,7 +117,8 @@ describe('Service Calls API', () => {
     test('should return 500 on database error', async () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/servicecalls/sc-1');
+      const response = await request(app).get('/api/servicecalls/sc-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch service call');
     });
@@ -132,6 +143,7 @@ describe('Service Calls API', () => {
 
       const response = await request(app)
         .post('/api/servicecalls')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Fix AC',
           description: 'AC not working',
@@ -158,6 +170,7 @@ describe('Service Calls API', () => {
 
       const response = await request(app)
         .post('/api/servicecalls')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ title: 'Test', created_by: 'admin-1' });
 
       expect(response.status).toBe(200);
@@ -172,6 +185,7 @@ describe('Service Calls API', () => {
 
       const response = await request(app)
         .post('/api/servicecalls')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ title: 'Fail', created_by: 'admin-1' });
 
       expect(response.status).toBe(500);
@@ -193,6 +207,7 @@ describe('Service Calls API', () => {
 
       const response = await request(app)
         .put('/api/servicecalls/sc-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Updated Title',
           description: 'Updated desc',
@@ -215,6 +230,7 @@ describe('Service Calls API', () => {
 
       const response = await request(app)
         .put('/api/servicecalls/sc-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ title: 'Fail' });
 
       expect(response.status).toBe(500);
@@ -229,7 +245,8 @@ describe('Service Calls API', () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
       mockDb.get.mockResolvedValue(completedCall);
 
-      const response = await request(app).post('/api/servicecalls/sc-1/complete');
+      const response = await request(app).post('/api/servicecalls/sc-1/complete')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body.status).toBe('completed');
@@ -241,7 +258,8 @@ describe('Service Calls API', () => {
     test('should return 500 on database error', async () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).post('/api/servicecalls/sc-1/complete');
+      const response = await request(app).post('/api/servicecalls/sc-1/complete')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to complete service call');
@@ -252,7 +270,8 @@ describe('Service Calls API', () => {
     test('should delete a service call', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).delete('/api/servicecalls/sc-1');
+      const response = await request(app).delete('/api/servicecalls/sc-1')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -264,7 +283,8 @@ describe('Service Calls API', () => {
     test('should return 500 on database error', async () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).delete('/api/servicecalls/sc-1');
+      const response = await request(app).delete('/api/servicecalls/sc-1')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to delete service call');
@@ -287,6 +307,7 @@ describe('Service Calls API', () => {
 
       const response = await request(app)
         .post('/api/servicecalls/sc-1/comments')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ user_id: 'user-1', comment: 'On my way' });
 
       expect(response.status).toBe(200);
@@ -305,6 +326,7 @@ describe('Service Calls API', () => {
 
       const response = await request(app)
         .post('/api/servicecalls/sc-1/comments')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ user_id: 'user-1', comment: 'Fail' });
 
       expect(response.status).toBe(500);
@@ -320,7 +342,8 @@ describe('Service Calls API', () => {
       ];
       mockDb.query.mockResolvedValue(mockComments);
 
-      const response = await request(app).get('/api/servicecalls/sc-1/comments');
+      const response = await request(app).get('/api/servicecalls/sc-1/comments')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -330,7 +353,8 @@ describe('Service Calls API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/servicecalls/sc-1/comments');
+      const response = await request(app).get('/api/servicecalls/sc-1/comments')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch comments');
     });

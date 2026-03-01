@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -23,6 +27,8 @@ jest.mock('uuid', () => ({
 }));
 
 const estimatesRouter = require('./routes/estimates');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -56,7 +62,8 @@ describe('Estimates API', () => {
       ];
       mockDb.query.mockResolvedValue(mockEstimates);
 
-      const response = await request(app).get('/api/estimates');
+      const response = await request(app).get('/api/estimates')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -65,7 +72,8 @@ describe('Estimates API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/estimates');
+      const response = await request(app).get('/api/estimates')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch estimates');
     });
@@ -76,7 +84,8 @@ describe('Estimates API', () => {
       const mockEstimate = { id: '1', title: 'Estimate A', total: 100 };
       mockDb.get.mockResolvedValue(mockEstimate);
 
-      const response = await request(app).get('/api/estimates/1');
+      const response = await request(app).get('/api/estimates/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.title).toBe('Estimate A');
     });
@@ -84,7 +93,8 @@ describe('Estimates API', () => {
     test('should return 404 if estimate not found', async () => {
       mockDb.get.mockResolvedValue(undefined);
 
-      const response = await request(app).get('/api/estimates/nonexistent');
+      const response = await request(app).get('/api/estimates/nonexistent')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Estimate not found');
     });
@@ -92,7 +102,8 @@ describe('Estimates API', () => {
     test('should return 500 on database error', async () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/estimates/1');
+      const response = await request(app).get('/api/estimates/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch estimate');
     });
@@ -120,6 +131,7 @@ describe('Estimates API', () => {
 
       const response = await request(app)
         .post('/api/estimates')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           customer_id: 'cust-1',
           title: 'Test Estimate',
@@ -136,6 +148,7 @@ describe('Estimates API', () => {
     test('should return 400 if customer_id is missing', async () => {
       const response = await request(app)
         .post('/api/estimates')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ title: 'Test Estimate' });
 
       expect(response.status).toBe(400);
@@ -145,6 +158,7 @@ describe('Estimates API', () => {
     test('should return 400 if title is missing', async () => {
       const response = await request(app)
         .post('/api/estimates')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ customer_id: 'cust-1' });
 
       expect(response.status).toBe(400);
@@ -167,6 +181,7 @@ describe('Estimates API', () => {
 
       const response = await request(app)
         .post('/api/estimates')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           customer_id: 'cust-1',
           title: 'Tax Estimate',
@@ -190,6 +205,7 @@ describe('Estimates API', () => {
 
       await request(app)
         .post('/api/estimates')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           customer_id: 'cust-1',
           title: 'Socket Test'
@@ -204,6 +220,7 @@ describe('Estimates API', () => {
 
       const response = await request(app)
         .post('/api/estimates')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           customer_id: 'cust-1',
           title: 'Error Estimate'
@@ -230,6 +247,7 @@ describe('Estimates API', () => {
 
       const response = await request(app)
         .put('/api/estimates/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           customer_id: 'cust-1',
           title: 'Updated Estimate',
@@ -244,6 +262,7 @@ describe('Estimates API', () => {
     test('should return 400 if customer_id is missing', async () => {
       const response = await request(app)
         .put('/api/estimates/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ title: 'Test' });
 
       expect(response.status).toBe(400);
@@ -253,6 +272,7 @@ describe('Estimates API', () => {
     test('should return 400 if title is missing', async () => {
       const response = await request(app)
         .put('/api/estimates/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ customer_id: 'cust-1' });
 
       expect(response.status).toBe(400);
@@ -274,6 +294,7 @@ describe('Estimates API', () => {
 
       const response = await request(app)
         .put('/api/estimates/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           customer_id: 'cust-1',
           title: 'Recalc Estimate',
@@ -295,6 +316,7 @@ describe('Estimates API', () => {
 
       await request(app)
         .put('/api/estimates/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           customer_id: 'cust-1',
           title: 'Updated'
@@ -309,6 +331,7 @@ describe('Estimates API', () => {
 
       const response = await request(app)
         .put('/api/estimates/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           customer_id: 'cust-1',
           title: 'Error Estimate'
@@ -323,7 +346,8 @@ describe('Estimates API', () => {
     test('should delete an estimate successfully', async () => {
       mockDb.run.mockResolvedValue({ id: 1 });
 
-      const response = await request(app).delete('/api/estimates/1');
+      const response = await request(app).delete('/api/estimates/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Estimate deleted successfully');
     });
@@ -331,7 +355,8 @@ describe('Estimates API', () => {
     test('should emit socket event on delete', async () => {
       mockDb.run.mockResolvedValue({ id: 1 });
 
-      await request(app).delete('/api/estimates/1');
+      await request(app).delete('/api/estimates/1')
+        .set('Authorization', `Bearer ${authToken}`);
 
       const mockIo = app.get('io');
       expect(mockIo.emit).toHaveBeenCalledWith('estimate:deleted', '1');
@@ -340,7 +365,8 @@ describe('Estimates API', () => {
     test('should return 500 on database error', async () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).delete('/api/estimates/1');
+      const response = await request(app).delete('/api/estimates/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to delete estimate');
     });
@@ -380,7 +406,8 @@ describe('Estimates API', () => {
         .mockResolvedValueOnce({ id: 1 });      // UPDATE estimate status
 
       const response = await request(app)
-        .post('/api/estimates/est-1/convert-to-invoice');
+        .post('/api/estimates/est-1/convert-to-invoice')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(201);
       expect(response.body.invoice_number).toBe(`INV-${year}-0001`);
@@ -392,7 +419,8 @@ describe('Estimates API', () => {
       mockDb.get.mockResolvedValue(undefined);
 
       const response = await request(app)
-        .post('/api/estimates/nonexistent/convert-to-invoice');
+        .post('/api/estimates/nonexistent/convert-to-invoice')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Estimate not found');
@@ -426,7 +454,8 @@ describe('Estimates API', () => {
         .mockResolvedValueOnce({ id: 1 });
 
       await request(app)
-        .post('/api/estimates/est-1/convert-to-invoice');
+        .post('/api/estimates/est-1/convert-to-invoice')
+        .set('Authorization', `Bearer ${authToken}`);
 
       const mockIo = app.get('io');
       expect(mockIo.emit).toHaveBeenCalledWith('invoice:created', mockInvoice);
@@ -456,7 +485,8 @@ describe('Estimates API', () => {
         .mockResolvedValueOnce({ id: 1 });
 
       const response = await request(app)
-        .post('/api/estimates/est-1/convert-to-invoice');
+        .post('/api/estimates/est-1/convert-to-invoice')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(201);
       // Verify the invoice_number passed to db.run INSERT
@@ -468,7 +498,8 @@ describe('Estimates API', () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
       const response = await request(app)
-        .post('/api/estimates/est-1/convert-to-invoice');
+        .post('/api/estimates/est-1/convert-to-invoice')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to convert estimate to invoice');

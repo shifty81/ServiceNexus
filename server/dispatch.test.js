@@ -2,6 +2,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 const mockDb = {
   query: jest.fn(),
@@ -12,6 +16,8 @@ jest.mock('./database', () => mockDb);
 jest.mock('uuid', () => ({ v4: () => 'test-dispatch-id' }));
 
 const dispatchRouter = require('./routes/dispatch');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -38,7 +44,8 @@ describe('Dispatch Routes', () => {
       mockDb.query.mockResolvedValue(mockDispatches);
       const app = createTestApp();
 
-      const res = await request(app).get('/api/dispatch');
+      const res = await request(app).get('/api/dispatch')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual(mockDispatches);
@@ -49,7 +56,8 @@ describe('Dispatch Routes', () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
       const app = createTestApp();
 
-      const res = await request(app).get('/api/dispatch');
+      const res = await request(app).get('/api/dispatch')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(500);
       expect(res.body).toEqual({ error: 'Failed to fetch dispatches' });
@@ -63,7 +71,8 @@ describe('Dispatch Routes', () => {
       mockDb.get.mockResolvedValue(mockDispatch);
       const app = createTestApp();
 
-      const res = await request(app).get('/api/dispatch/1');
+      const res = await request(app).get('/api/dispatch/1')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual(mockDispatch);
@@ -74,7 +83,8 @@ describe('Dispatch Routes', () => {
       mockDb.get.mockResolvedValue(undefined);
       const app = createTestApp();
 
-      const res = await request(app).get('/api/dispatch/nonexistent');
+      const res = await request(app).get('/api/dispatch/nonexistent')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(404);
       expect(res.body).toEqual({ error: 'Dispatch not found' });
@@ -84,7 +94,8 @@ describe('Dispatch Routes', () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
       const app = createTestApp();
 
-      const res = await request(app).get('/api/dispatch/1');
+      const res = await request(app).get('/api/dispatch/1')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(500);
       expect(res.body).toEqual({ error: 'Failed to fetch dispatch' });
@@ -102,7 +113,7 @@ describe('Dispatch Routes', () => {
         address: '123 Main St'
       };
 
-      const res = await request(app).post('/api/dispatch').send(newDispatch);
+      const res = await request(app).post('/api/dispatch').set('Authorization', `Bearer ${authToken}`).send(newDispatch);
 
       expect(res.status).toBe(201);
       expect(res.body).toEqual({
@@ -121,7 +132,7 @@ describe('Dispatch Routes', () => {
       mockDb.run.mockResolvedValue({});
       const app = createTestApp();
 
-      await request(app).post('/api/dispatch').send({
+      await request(app).post('/api/dispatch').set('Authorization', `Bearer ${authToken}`).send({
         title: 'New Dispatch',
         description: 'Desc',
         address: '123 Main St'
@@ -134,7 +145,7 @@ describe('Dispatch Routes', () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
       const app = createTestApp();
 
-      const res = await request(app).post('/api/dispatch').send({
+      const res = await request(app).post('/api/dispatch').set('Authorization', `Bearer ${authToken}`).send({
         title: 'New Dispatch',
         description: 'Desc',
         address: '123 Main St'
@@ -147,7 +158,7 @@ describe('Dispatch Routes', () => {
     it('should return 400 when title is missing', async () => {
       const app = createTestApp();
 
-      const res = await request(app).post('/api/dispatch').send({
+      const res = await request(app).post('/api/dispatch').set('Authorization', `Bearer ${authToken}`).send({
         description: 'No title provided',
         address: '123 Main St'
       });
@@ -174,7 +185,7 @@ describe('Dispatch Routes', () => {
         due_date: '2025-01-01'
       };
 
-      const res = await request(app).put('/api/dispatch/1').send(updatedDispatch);
+      const res = await request(app).put('/api/dispatch/1').set('Authorization', `Bearer ${authToken}`).send(updatedDispatch);
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual({ id: '1', message: 'Dispatch updated successfully' });
@@ -188,7 +199,7 @@ describe('Dispatch Routes', () => {
       mockDb.run.mockResolvedValue({});
       const app = createTestApp();
 
-      await request(app).put('/api/dispatch/1').send({
+      await request(app).put('/api/dispatch/1').set('Authorization', `Bearer ${authToken}`).send({
         title: 'Updated',
         description: 'Desc',
         address: '456 Oak Ave'
@@ -201,7 +212,7 @@ describe('Dispatch Routes', () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
       const app = createTestApp();
 
-      const res = await request(app).put('/api/dispatch/1').send({ title: 'Updated' });
+      const res = await request(app).put('/api/dispatch/1').set('Authorization', `Bearer ${authToken}`).send({ title: 'Updated' });
 
       expect(res.status).toBe(500);
       expect(res.body).toEqual({ error: 'Failed to update dispatch' });
@@ -214,7 +225,8 @@ describe('Dispatch Routes', () => {
       mockDb.run.mockResolvedValue({});
       const app = createTestApp();
 
-      const res = await request(app).post('/api/dispatch/1/complete');
+      const res = await request(app).post('/api/dispatch/1/complete')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual({ message: 'Dispatch completed successfully' });
@@ -228,7 +240,8 @@ describe('Dispatch Routes', () => {
       mockDb.run.mockResolvedValue({});
       const app = createTestApp();
 
-      await request(app).post('/api/dispatch/1/complete');
+      await request(app).post('/api/dispatch/1/complete')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(app.get('io').emit).toHaveBeenCalledWith('dispatch-changed', { action: 'completed', id: '1' });
     });
@@ -237,7 +250,8 @@ describe('Dispatch Routes', () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
       const app = createTestApp();
 
-      const res = await request(app).post('/api/dispatch/1/complete');
+      const res = await request(app).post('/api/dispatch/1/complete')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(500);
       expect(res.body).toEqual({ error: 'Failed to complete dispatch' });
@@ -250,7 +264,8 @@ describe('Dispatch Routes', () => {
       mockDb.run.mockResolvedValue({});
       const app = createTestApp();
 
-      const res = await request(app).delete('/api/dispatch/1');
+      const res = await request(app).delete('/api/dispatch/1')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual({ message: 'Dispatch deleted successfully' });
@@ -261,7 +276,8 @@ describe('Dispatch Routes', () => {
       mockDb.run.mockResolvedValue({});
       const app = createTestApp();
 
-      await request(app).delete('/api/dispatch/1');
+      await request(app).delete('/api/dispatch/1')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(app.get('io').emit).toHaveBeenCalledWith('dispatch-changed', { action: 'deleted', id: '1' });
     });
@@ -270,7 +286,8 @@ describe('Dispatch Routes', () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
       const app = createTestApp();
 
-      const res = await request(app).delete('/api/dispatch/1');
+      const res = await request(app).delete('/api/dispatch/1')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(500);
       expect(res.body).toEqual({ error: 'Failed to delete dispatch' });

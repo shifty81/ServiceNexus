@@ -31,6 +31,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const authRouter = require('./routes/auth');
 
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
+
 const createTestApp = () => {
   const app = express();
   app.use(cors());
@@ -185,7 +187,8 @@ describe('Auth API', () => {
       ];
       mockDb.query.mockResolvedValue(mockUsers);
 
-      const res = await request(app).get('/api/auth/users');
+      const res = await request(app).get('/api/auth/users')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(2);
@@ -196,7 +199,8 @@ describe('Auth API', () => {
     it('should return empty array when no users exist', async () => {
       mockDb.query.mockResolvedValue([]);
 
-      const res = await request(app).get('/api/auth/users');
+      const res = await request(app).get('/api/auth/users')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual([]);
@@ -205,7 +209,8 @@ describe('Auth API', () => {
     it('should return 500 when database query fails', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const res = await request(app).get('/api/auth/users');
+      const res = await request(app).get('/api/auth/users')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('Failed to fetch users');

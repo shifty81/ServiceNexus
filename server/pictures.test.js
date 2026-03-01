@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -34,6 +38,8 @@ jest.mock('fs', () => ({
 jest.mock('express-rate-limit', () => jest.fn(() => (req, res, next) => next()));
 
 const picturesRouter = require('./routes/pictures');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -67,7 +73,8 @@ describe('Pictures API', () => {
       ];
       mockDb.query.mockResolvedValue(mockPictures);
 
-      const response = await request(app).get('/api/pictures/servicecall/sc-1');
+      const response = await request(app).get('/api/pictures/servicecall/sc-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -77,7 +84,8 @@ describe('Pictures API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/pictures/servicecall/sc-1');
+      const response = await request(app).get('/api/pictures/servicecall/sc-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch pictures');
     });
@@ -95,6 +103,7 @@ describe('Pictures API', () => {
 
       const response = await request(app)
         .put('/api/pictures/pic-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ comment: 'Updated comment' });
 
       expect(response.status).toBe(200);
@@ -113,6 +122,7 @@ describe('Pictures API', () => {
 
       const response = await request(app)
         .put('/api/pictures/pic-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ comment });
 
       expect(response.status).toBe(200);
@@ -134,6 +144,7 @@ describe('Pictures API', () => {
 
       await request(app)
         .put('/api/pictures/pic-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ comment: 'New comment' });
 
       expect(app.get('io').emit).toHaveBeenCalledWith('picture-updated', updatedPicture);
@@ -144,6 +155,7 @@ describe('Pictures API', () => {
 
       const response = await request(app)
         .put('/api/pictures/pic-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ comment: 'Some comment' });
 
       expect(response.status).toBe(500);
@@ -160,7 +172,8 @@ describe('Pictures API', () => {
       mockDb.get.mockResolvedValue(mockPicture);
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).delete('/api/pictures/pic-1');
+      const response = await request(app).delete('/api/pictures/pic-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
 
@@ -172,7 +185,8 @@ describe('Pictures API', () => {
       mockDb.get.mockResolvedValue(undefined);
       mockDb.run.mockResolvedValue({ changes: 0 });
 
-      const response = await request(app).delete('/api/pictures/nonexistent');
+      const response = await request(app).delete('/api/pictures/nonexistent')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
 
@@ -184,7 +198,8 @@ describe('Pictures API', () => {
       mockDb.get.mockResolvedValue({ id: 'pic-1', file_path: '/tmp/photo.jpg' });
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      await request(app).delete('/api/pictures/pic-1');
+      await request(app).delete('/api/pictures/pic-1')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(app.get('io').emit).toHaveBeenCalledWith('picture-deleted', { id: 'pic-1' });
     });
@@ -192,7 +207,8 @@ describe('Pictures API', () => {
     test('should return 500 on database error', async () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).delete('/api/pictures/pic-1');
+      const response = await request(app).delete('/api/pictures/pic-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to delete picture');
     });
@@ -202,6 +218,7 @@ describe('Pictures API', () => {
     test('should return 400 when no file is uploaded', async () => {
       const response = await request(app)
         .post('/api/pictures/upload')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ service_call_id: 'sc-1', uploaded_by: 'user-1' });
 
       expect(response.status).toBe(400);

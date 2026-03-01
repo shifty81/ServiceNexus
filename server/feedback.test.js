@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -23,6 +27,8 @@ jest.mock('uuid', () => ({
 }));
 
 const feedbackRouter = require('./routes/feedback');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -56,7 +62,8 @@ describe('Feedback API', () => {
       ];
       mockDb.query.mockResolvedValue(mockFeedback);
 
-      const response = await request(app).get('/api/feedback');
+      const response = await request(app).get('/api/feedback')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -65,7 +72,8 @@ describe('Feedback API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/feedback');
+      const response = await request(app).get('/api/feedback')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch feedback');
     });
@@ -76,7 +84,8 @@ describe('Feedback API', () => {
       const mockFb = { id: '1', rating: 5, comment: 'Excellent' };
       mockDb.get.mockResolvedValue(mockFb);
 
-      const response = await request(app).get('/api/feedback/servicecall/sc-123');
+      const response = await request(app).get('/api/feedback/servicecall/sc-123')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.rating).toBe(5);
     });
@@ -84,7 +93,8 @@ describe('Feedback API', () => {
     test('should return null when no feedback exists', async () => {
       mockDb.get.mockResolvedValue(undefined);
 
-      const response = await request(app).get('/api/feedback/servicecall/sc-999');
+      const response = await request(app).get('/api/feedback/servicecall/sc-999')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body).toBeNull();
     });
@@ -98,7 +108,8 @@ describe('Feedback API', () => {
       ];
       mockDb.query.mockResolvedValue(mockFeedback);
 
-      const response = await request(app).get('/api/feedback/technician/tech-1');
+      const response = await request(app).get('/api/feedback/technician/tech-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.stats.totalReviews).toBe(2);
       expect(response.body.stats.averageRating).toBe(4.5);
@@ -107,7 +118,8 @@ describe('Feedback API', () => {
     test('should return zero stats when no feedback', async () => {
       mockDb.query.mockResolvedValue([]);
 
-      const response = await request(app).get('/api/feedback/technician/tech-new');
+      const response = await request(app).get('/api/feedback/technician/tech-new')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.stats.totalReviews).toBe(0);
       expect(response.body.stats.averageRating).toBe(0);
@@ -125,6 +137,7 @@ describe('Feedback API', () => {
 
       const response = await request(app)
         .post('/api/feedback')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           service_call_id: 'sc-1',
           rating: 5,
@@ -139,6 +152,7 @@ describe('Feedback API', () => {
     test('should reject missing required fields', async () => {
       const response = await request(app)
         .post('/api/feedback')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ rating: 5 });
 
       expect(response.status).toBe(400);
@@ -148,6 +162,7 @@ describe('Feedback API', () => {
     test('should reject invalid rating', async () => {
       const response = await request(app)
         .post('/api/feedback')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           service_call_id: 'sc-1',
           rating: 6,
@@ -161,6 +176,7 @@ describe('Feedback API', () => {
     test('should reject rating of 0', async () => {
       const response = await request(app)
         .post('/api/feedback')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           service_call_id: 'sc-1',
           rating: 0,
@@ -173,6 +189,7 @@ describe('Feedback API', () => {
     test('should reject non-integer rating', async () => {
       const response = await request(app)
         .post('/api/feedback')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           service_call_id: 'sc-1',
           rating: 3.5,
@@ -188,6 +205,7 @@ describe('Feedback API', () => {
 
       const response = await request(app)
         .post('/api/feedback')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           service_call_id: 'sc-invalid',
           rating: 5,
@@ -203,6 +221,7 @@ describe('Feedback API', () => {
 
       const response = await request(app)
         .post('/api/feedback')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           service_call_id: 'sc-1',
           rating: 5,
@@ -220,6 +239,7 @@ describe('Feedback API', () => {
 
       const response = await request(app)
         .post('/api/feedback')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           service_call_id: 'sc-1',
           rating: 5,
@@ -238,7 +258,8 @@ describe('Feedback API', () => {
       ];
       mockDb.query.mockResolvedValue(mockStats);
 
-      const response = await request(app).get('/api/feedback/stats/summary');
+      const response = await request(app).get('/api/feedback/stats/summary')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body[0].technician_name).toBe('John');

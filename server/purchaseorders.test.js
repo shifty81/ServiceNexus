@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -23,6 +27,8 @@ jest.mock('uuid', () => ({
 }));
 
 const purchaseOrdersRouter = require('./routes/purchaseorders');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -56,7 +62,8 @@ describe('Purchase Orders API', () => {
       ];
       mockDb.query.mockResolvedValue(mockPOs);
 
-      const response = await request(app).get('/api/purchase-orders');
+      const response = await request(app).get('/api/purchase-orders')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -68,7 +75,8 @@ describe('Purchase Orders API', () => {
       ];
       mockDb.query.mockResolvedValue(mockPOs);
 
-      const response = await request(app).get('/api/purchase-orders?status=approved');
+      const response = await request(app).get('/api/purchase-orders?status=approved')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(mockDb.query).toHaveBeenCalledWith(
         expect.stringContaining('AND po.status = ?'),
@@ -82,7 +90,8 @@ describe('Purchase Orders API', () => {
       ];
       mockDb.query.mockResolvedValue(mockPOs);
 
-      const response = await request(app).get('/api/purchase-orders?service_call_id=sc-1');
+      const response = await request(app).get('/api/purchase-orders?service_call_id=sc-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(mockDb.query).toHaveBeenCalledWith(
         expect.stringContaining('AND po.service_call_id = ?'),
@@ -93,7 +102,8 @@ describe('Purchase Orders API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/purchase-orders');
+      const response = await request(app).get('/api/purchase-orders')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch purchase orders');
     });
@@ -104,7 +114,8 @@ describe('Purchase Orders API', () => {
       const mockPO = { id: 'po-1', po_number: 'PO-2025-0001', vendor_name: 'Vendor A' };
       mockDb.get.mockResolvedValue(mockPO);
 
-      const response = await request(app).get('/api/purchase-orders/po-1');
+      const response = await request(app).get('/api/purchase-orders/po-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.po_number).toBe('PO-2025-0001');
     });
@@ -112,7 +123,8 @@ describe('Purchase Orders API', () => {
     test('should return 404 if purchase order not found', async () => {
       mockDb.get.mockResolvedValue(undefined);
 
-      const response = await request(app).get('/api/purchase-orders/nonexistent');
+      const response = await request(app).get('/api/purchase-orders/nonexistent')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Purchase order not found');
     });
@@ -120,7 +132,8 @@ describe('Purchase Orders API', () => {
     test('should return 500 on database error', async () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/purchase-orders/po-1');
+      const response = await request(app).get('/api/purchase-orders/po-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch purchase order');
     });
@@ -156,6 +169,7 @@ describe('Purchase Orders API', () => {
 
       const response = await request(app)
         .post('/api/purchase-orders')
+        .set('Authorization', `Bearer ${authToken}`)
         .send(newPO);
 
       expect(response.status).toBe(200);
@@ -172,6 +186,7 @@ describe('Purchase Orders API', () => {
 
       const response = await request(app)
         .post('/api/purchase-orders')
+        .set('Authorization', `Bearer ${authToken}`)
         .send(newPO);
 
       expect(response.status).toBe(500);
@@ -206,6 +221,7 @@ describe('Purchase Orders API', () => {
 
       const response = await request(app)
         .put('/api/purchase-orders/po-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send(updatedPO);
 
       expect(response.status).toBe(200);
@@ -220,6 +236,7 @@ describe('Purchase Orders API', () => {
 
       const response = await request(app)
         .put('/api/purchase-orders/po-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send(updatedPO);
 
       expect(response.status).toBe(500);
@@ -235,6 +252,7 @@ describe('Purchase Orders API', () => {
 
       const response = await request(app)
         .post('/api/purchase-orders/po-1/approve')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ approved_by: 'admin-1' });
 
       expect(response.status).toBe(200);
@@ -249,6 +267,7 @@ describe('Purchase Orders API', () => {
 
       const response = await request(app)
         .post('/api/purchase-orders/po-1/approve')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ approved_by: 'admin-1' });
 
       expect(response.status).toBe(500);
@@ -263,7 +282,8 @@ describe('Purchase Orders API', () => {
       mockDb.get.mockResolvedValue(rejectedPO);
 
       const response = await request(app)
-        .post('/api/purchase-orders/po-1/reject');
+        .post('/api/purchase-orders/po-1/reject')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body.status).toBe('rejected');
@@ -276,7 +296,8 @@ describe('Purchase Orders API', () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
       const response = await request(app)
-        .post('/api/purchase-orders/po-1/reject');
+        .post('/api/purchase-orders/po-1/reject')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to reject purchase order');
@@ -290,7 +311,8 @@ describe('Purchase Orders API', () => {
       mockDb.get.mockResolvedValue(receivedPO);
 
       const response = await request(app)
-        .post('/api/purchase-orders/po-1/receive');
+        .post('/api/purchase-orders/po-1/receive')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body.status).toBe('received');
@@ -303,7 +325,8 @@ describe('Purchase Orders API', () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
       const response = await request(app)
-        .post('/api/purchase-orders/po-1/receive');
+        .post('/api/purchase-orders/po-1/receive')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to mark purchase order as received');
@@ -315,7 +338,8 @@ describe('Purchase Orders API', () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
       const response = await request(app)
-        .delete('/api/purchase-orders/po-1');
+        .delete('/api/purchase-orders/po-1')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -328,7 +352,8 @@ describe('Purchase Orders API', () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
       const response = await request(app)
-        .delete('/api/purchase-orders/po-1');
+        .delete('/api/purchase-orders/po-1')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to delete purchase order');

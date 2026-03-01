@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -18,6 +22,8 @@ const mockDb = {
 jest.mock('./database', () => mockDb);
 
 const maintenanceRouter = require('./routes/maintenance');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -47,7 +53,8 @@ describe('Maintenance API', () => {
       ];
       mockDb.query.mockResolvedValue(mockSchedules);
 
-      const response = await request(app).get('/api/maintenance/schedules');
+      const response = await request(app).get('/api/maintenance/schedules')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(1);
@@ -75,6 +82,7 @@ describe('Maintenance API', () => {
 
       const response = await request(app)
         .post('/api/maintenance/schedules')
+        .set('Authorization', `Bearer ${authToken}`)
         .send(newSchedule);
       expect(response.status).toBe(200);
       expect(response.body.equipment_id).toBe('e1');
@@ -84,6 +92,7 @@ describe('Maintenance API', () => {
     test('should return 400 for missing required fields', async () => {
       const response = await request(app)
         .post('/api/maintenance/schedules')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({});
       expect(response.status).toBe(400);
       expect(response.body.error).toBeDefined();
@@ -94,7 +103,8 @@ describe('Maintenance API', () => {
     test('should delete a schedule', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).delete('/api/maintenance/schedules/s1');
+      const response = await request(app).delete('/api/maintenance/schedules/s1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
     });
@@ -107,7 +117,8 @@ describe('Maintenance API', () => {
       ];
       mockDb.query.mockResolvedValue(mockAlerts);
 
-      const response = await request(app).get('/api/maintenance/alerts');
+      const response = await request(app).get('/api/maintenance/alerts')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(1);
@@ -122,6 +133,7 @@ describe('Maintenance API', () => {
 
       const response = await request(app)
         .put('/api/maintenance/alerts/a1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ status: 'resolved', resolved_by: 'u1' });
       expect(response.status).toBe(200);
       expect(response.body.status).toBe('resolved');
@@ -141,7 +153,8 @@ describe('Maintenance API', () => {
         { id: 'e1', name: 'HVAC', alert_type: 'overdue', severity: 'high', alert_title: 'Overdue maintenance' }
       ]);
 
-      const response = await request(app).get('/api/maintenance/dashboard');
+      const response = await request(app).get('/api/maintenance/dashboard')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.total_equipment).toBe(50);
       expect(response.body.active_schedules).toBe(10);
@@ -158,7 +171,8 @@ describe('Maintenance API', () => {
         .mockResolvedValueOnce([]) // active schedules (none)
         .mockResolvedValueOnce([]); // frequent equipment (none)
 
-      const response = await request(app).post('/api/maintenance/generate-alerts');
+      const response = await request(app).post('/api/maintenance/generate-alerts')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.alerts_created).toBe(0);
       expect(Array.isArray(response.body.alerts)).toBe(true);
@@ -169,7 +183,8 @@ describe('Maintenance API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/maintenance/schedules');
+      const response = await request(app).get('/api/maintenance/schedules')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch maintenance schedules');
     });

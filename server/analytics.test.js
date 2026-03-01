@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -18,6 +22,8 @@ const mockDb = {
 jest.mock('./database', () => mockDb);
 
 const analyticsRouter = require('./routes/analytics');
+
+const adminToken = jwt.sign({ id: 'admin-1', username: 'admin', role: 'admin', user_type: 'admin' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -96,7 +102,8 @@ describe('Analytics API', () => {
         return Promise.resolve([]);
       });
 
-      const response = await request(app).get('/api/analytics');
+      const response = await request(app).get('/api/analytics')
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(response.status).toBe(200);
       expect(response.body.revenue).toBeDefined();
       expect(response.body.revenue.totalRevenue).toBe(50000);
@@ -113,7 +120,8 @@ describe('Analytics API', () => {
     test('should return 500 on database error', async () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/analytics');
+      const response = await request(app).get('/api/analytics')
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch analytics data');
     });
@@ -158,7 +166,8 @@ describe('Analytics API', () => {
 
       mockDb.query.mockResolvedValue([]);
 
-      const response = await request(app).get('/api/analytics');
+      const response = await request(app).get('/api/analytics')
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(response.status).toBe(200);
       expect(response.body.revenue.totalRevenue).toBe(0);
       expect(response.body.servicePerformance.completionRate).toBe(0);

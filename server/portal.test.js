@@ -2,11 +2,18 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 const mockDb = { query: jest.fn(), get: jest.fn(), run: jest.fn() };
 jest.mock('./database', () => mockDb);
 
 const portalRouter = require('./routes/portal');
+
+const customerToken = jwt.sign({ id: '1', username: 'customer1', role: 'user', user_type: 'user' }, JWT_SECRET);
+const technicianToken = jwt.sign({ id: '2', username: 'tech1', role: 'user', user_type: 'technician' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -60,7 +67,8 @@ describe('Portal Routes', () => {
         .mockResolvedValueOnce(mockEquipment)
         .mockResolvedValueOnce(mockFeedback);
 
-      const res = await request(app).get('/api/portal/customer/1');
+      const res = await request(app).get('/api/portal/customer/1')
+        .set('Authorization', `Bearer ${customerToken}`);
 
       expect(res.status).toBe(200);
       // activeRequests: pending + in-progress = 2 (not completed, not cancelled)
@@ -95,7 +103,8 @@ describe('Portal Routes', () => {
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([]);
 
-      const res = await request(app).get('/api/portal/customer/1');
+      const res = await request(app).get('/api/portal/customer/1')
+        .set('Authorization', `Bearer ${customerToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body.serviceCalls).toHaveLength(10);
@@ -106,7 +115,8 @@ describe('Portal Routes', () => {
       const app = createTestApp();
       mockDb.query.mockRejectedValueOnce(new Error('DB error'));
 
-      const res = await request(app).get('/api/portal/customer/1');
+      const res = await request(app).get('/api/portal/customer/1')
+        .set('Authorization', `Bearer ${customerToken}`);
 
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('Failed to load portal data');
@@ -156,7 +166,8 @@ describe('Portal Routes', () => {
         .mockResolvedValueOnce(mockFeedbackRows);
       mockDb.get.mockResolvedValueOnce(mockFeedbackStats);
 
-      const res = await request(app).get('/api/portal/technician/2');
+      const res = await request(app).get('/api/portal/technician/2')
+        .set('Authorization', `Bearer ${technicianToken}`);
 
       expect(res.status).toBe(200);
       // activeJobs: 2 in-progress
@@ -198,7 +209,8 @@ describe('Portal Routes', () => {
         .mockResolvedValueOnce([]);
       mockDb.get.mockResolvedValueOnce({ total_reviews: 0, average_rating: 0 });
 
-      const res = await request(app).get('/api/portal/technician/2');
+      const res = await request(app).get('/api/portal/technician/2')
+        .set('Authorization', `Bearer ${technicianToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body.stats.isClockedIn).toBe(false);
@@ -220,7 +232,8 @@ describe('Portal Routes', () => {
         .mockResolvedValueOnce([]);
       mockDb.get.mockResolvedValueOnce(null);
 
-      const res = await request(app).get('/api/portal/technician/2');
+      const res = await request(app).get('/api/portal/technician/2')
+        .set('Authorization', `Bearer ${technicianToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body.stats.averageRating).toBe(0);
@@ -231,7 +244,8 @@ describe('Portal Routes', () => {
       const app = createTestApp();
       mockDb.query.mockRejectedValueOnce(new Error('DB error'));
 
-      const res = await request(app).get('/api/portal/technician/2');
+      const res = await request(app).get('/api/portal/technician/2')
+        .set('Authorization', `Bearer ${technicianToken}`);
 
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('Failed to load portal data');

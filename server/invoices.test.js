@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -23,6 +27,8 @@ jest.mock('uuid', () => ({
 }));
 
 const invoicesRouter = require('./routes/invoices');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -56,7 +62,8 @@ describe('Invoices API', () => {
       ];
       mockDb.query.mockResolvedValue(mockInvoices);
 
-      const response = await request(app).get('/api/invoices');
+      const response = await request(app).get('/api/invoices')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -65,7 +72,8 @@ describe('Invoices API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/invoices');
+      const response = await request(app).get('/api/invoices')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch invoices');
     });
@@ -76,7 +84,8 @@ describe('Invoices API', () => {
       const mockInvoice = { id: '1', invoice_number: 'INV-2025-0001', title: 'Service A', total: 100 };
       mockDb.get.mockResolvedValue(mockInvoice);
 
-      const response = await request(app).get('/api/invoices/1');
+      const response = await request(app).get('/api/invoices/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.id).toBe('1');
       expect(response.body.title).toBe('Service A');
@@ -85,7 +94,8 @@ describe('Invoices API', () => {
     test('should return 404 if invoice not found', async () => {
       mockDb.get.mockResolvedValue(undefined);
 
-      const response = await request(app).get('/api/invoices/non-existent');
+      const response = await request(app).get('/api/invoices/non-existent')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Invoice not found');
     });
@@ -93,7 +103,8 @@ describe('Invoices API', () => {
     test('should return 500 on database error', async () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/invoices/1');
+      const response = await request(app).get('/api/invoices/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch invoice');
     });
@@ -127,6 +138,7 @@ describe('Invoices API', () => {
 
       const response = await request(app)
         .post('/api/invoices')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           customer_id: 'cust-1',
           title: 'Repair Job',
@@ -145,6 +157,7 @@ describe('Invoices API', () => {
     test('should return 400 if customer_id is missing', async () => {
       const response = await request(app)
         .post('/api/invoices')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ title: 'Test Invoice' });
 
       expect(response.status).toBe(400);
@@ -154,6 +167,7 @@ describe('Invoices API', () => {
     test('should return 400 if title is missing', async () => {
       const response = await request(app)
         .post('/api/invoices')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ customer_id: 'cust-1' });
 
       expect(response.status).toBe(400);
@@ -177,6 +191,7 @@ describe('Invoices API', () => {
 
       const response = await request(app)
         .post('/api/invoices')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           customer_id: 'cust-1',
           title: 'Consultation'
@@ -195,6 +210,7 @@ describe('Invoices API', () => {
 
       await request(app)
         .post('/api/invoices')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ customer_id: 'cust-1', title: 'Socket Test' });
 
       const mockIo = app.get('io');
@@ -206,6 +222,7 @@ describe('Invoices API', () => {
 
       const response = await request(app)
         .post('/api/invoices')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ customer_id: 'cust-1', title: 'Test' });
 
       expect(response.status).toBe(500);
@@ -235,6 +252,7 @@ describe('Invoices API', () => {
 
       const response = await request(app)
         .put('/api/invoices/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           customer_id: 'cust-1',
           title: 'Updated Job',
@@ -252,6 +270,7 @@ describe('Invoices API', () => {
     test('should return 400 if customer_id is missing', async () => {
       const response = await request(app)
         .put('/api/invoices/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ title: 'Test' });
 
       expect(response.status).toBe(400);
@@ -261,6 +280,7 @@ describe('Invoices API', () => {
     test('should return 400 if title is missing', async () => {
       const response = await request(app)
         .put('/api/invoices/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ customer_id: 'cust-1' });
 
       expect(response.status).toBe(400);
@@ -275,6 +295,7 @@ describe('Invoices API', () => {
 
       await request(app)
         .put('/api/invoices/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ customer_id: 'cust-1', title: 'Socket Update Test' });
 
       const mockIo = app.get('io');
@@ -286,6 +307,7 @@ describe('Invoices API', () => {
 
       const response = await request(app)
         .put('/api/invoices/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ customer_id: 'cust-1', title: 'Test' });
 
       expect(response.status).toBe(500);
@@ -297,7 +319,8 @@ describe('Invoices API', () => {
     test('should delete an invoice successfully', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).delete('/api/invoices/1');
+      const response = await request(app).delete('/api/invoices/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Invoice deleted successfully');
     });
@@ -305,7 +328,8 @@ describe('Invoices API', () => {
     test('should emit socket event on deletion', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      await request(app).delete('/api/invoices/1');
+      await request(app).delete('/api/invoices/1')
+        .set('Authorization', `Bearer ${authToken}`);
 
       const mockIo = app.get('io');
       expect(mockIo.emit).toHaveBeenCalledWith('invoice:deleted', '1');
@@ -314,7 +338,8 @@ describe('Invoices API', () => {
     test('should return 500 on database error', async () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).delete('/api/invoices/1');
+      const response = await request(app).delete('/api/invoices/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to delete invoice');
     });
@@ -332,6 +357,7 @@ describe('Invoices API', () => {
 
       const response = await request(app)
         .post('/api/invoices/1/payment')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ amount: 50 });
 
       expect(response.status).toBe(200);
@@ -350,6 +376,7 @@ describe('Invoices API', () => {
 
       const response = await request(app)
         .post('/api/invoices/1/payment')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ amount: 50 });
 
       expect(response.status).toBe(200);
@@ -360,6 +387,7 @@ describe('Invoices API', () => {
     test('should return 400 if amount is missing', async () => {
       const response = await request(app)
         .post('/api/invoices/1/payment')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({});
 
       expect(response.status).toBe(400);
@@ -369,6 +397,7 @@ describe('Invoices API', () => {
     test('should return 400 if amount is zero', async () => {
       const response = await request(app)
         .post('/api/invoices/1/payment')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ amount: 0 });
 
       expect(response.status).toBe(400);
@@ -378,6 +407,7 @@ describe('Invoices API', () => {
     test('should return 400 if amount is negative', async () => {
       const response = await request(app)
         .post('/api/invoices/1/payment')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ amount: -10 });
 
       expect(response.status).toBe(400);
@@ -389,6 +419,7 @@ describe('Invoices API', () => {
 
       const response = await request(app)
         .post('/api/invoices/non-existent/payment')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ amount: 50 });
 
       expect(response.status).toBe(404);
@@ -406,6 +437,7 @@ describe('Invoices API', () => {
 
       await request(app)
         .post('/api/invoices/1/payment')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ amount: 100 });
 
       const mockIo = app.get('io');
@@ -417,6 +449,7 @@ describe('Invoices API', () => {
 
       const response = await request(app)
         .post('/api/invoices/1/payment')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ amount: 50 });
 
       expect(response.status).toBe(500);

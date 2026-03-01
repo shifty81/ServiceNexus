@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -18,6 +22,8 @@ const mockDb = {
 jest.mock('./database', () => mockDb);
 
 const routingRouter = require('./routes/routing');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -54,7 +60,8 @@ describe('Routing API', () => {
         .mockResolvedValueOnce([]) // ratings
         .mockResolvedValueOnce([]); // activeEntries
 
-      const response = await request(app).get('/api/routing');
+      const response = await request(app).get('/api/routing')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(1);
@@ -67,7 +74,8 @@ describe('Routing API', () => {
     test('should return empty array when no unassigned calls', async () => {
       mockDb.query.mockResolvedValueOnce([]); // no unassigned calls
 
-      const response = await request(app).get('/api/routing');
+      const response = await request(app).get('/api/routing')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body).toEqual([]);
     });
@@ -84,7 +92,8 @@ describe('Routing API', () => {
         .mockResolvedValueOnce([{ technician_id: 'u1', avg_rating: 4.5 }]) // ratings
         .mockResolvedValueOnce([]); // activeEntries
 
-      const response = await request(app).get('/api/routing/technician-scores');
+      const response = await request(app).get('/api/routing/technician-scores')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(1);
@@ -100,7 +109,8 @@ describe('Routing API', () => {
     test('should return empty array when no technicians', async () => {
       mockDb.query.mockResolvedValueOnce([]); // no technicians
 
-      const response = await request(app).get('/api/routing/technician-scores');
+      const response = await request(app).get('/api/routing/technician-scores')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body).toEqual([]);
     });
@@ -123,6 +133,7 @@ describe('Routing API', () => {
 
       const response = await request(app)
         .post('/api/routing/auto-assign')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ service_call_id: 'sc1' });
       expect(response.status).toBe(200);
       expect(response.body.serviceCall).toBeDefined();
@@ -135,6 +146,7 @@ describe('Routing API', () => {
     test('should return 400 when service_call_id is missing', async () => {
       const response = await request(app)
         .post('/api/routing/auto-assign')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({});
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('service_call_id is required');
@@ -145,6 +157,7 @@ describe('Routing API', () => {
 
       const response = await request(app)
         .post('/api/routing/auto-assign')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ service_call_id: 'nonexistent' });
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Service call not found');
@@ -155,7 +168,8 @@ describe('Routing API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/routing');
+      const response = await request(app).get('/api/routing')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to get routing suggestions');
     });

@@ -70,7 +70,7 @@ describe('Notifications API', () => {
       mockDb.query.mockResolvedValue([]);
 
       const response = await request(app)
-        .get('/api/notifications?user_id=u1')
+        .get('/api/notifications')
         .set('Authorization', `Bearer ${userToken}`);
       expect(response.status).toBe(200);
     });

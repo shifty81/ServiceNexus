@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -31,6 +35,8 @@ jest.mock('fs', () => ({
 
 const fs = require('fs');
 const formsRouter = require('./routes/forms');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -59,7 +65,8 @@ describe('Forms API', () => {
       ];
       mockDb.query.mockResolvedValue(mockForms);
 
-      const response = await request(app).get('/api/forms');
+      const response = await request(app).get('/api/forms')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -71,7 +78,8 @@ describe('Forms API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/forms');
+      const response = await request(app).get('/api/forms')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch forms');
     });
@@ -86,7 +94,8 @@ describe('Forms API', () => {
       };
       mockDb.get.mockResolvedValue(mockForm);
 
-      const response = await request(app).get('/api/forms/1');
+      const response = await request(app).get('/api/forms/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.title).toBe('Form A');
       expect(response.body.fields).toEqual([{ type: 'text', label: 'Name' }]);
@@ -96,7 +105,8 @@ describe('Forms API', () => {
     test('should return 404 when form not found', async () => {
       mockDb.get.mockResolvedValue(undefined);
 
-      const response = await request(app).get('/api/forms/999');
+      const response = await request(app).get('/api/forms/999')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Form not found');
     });
@@ -104,7 +114,8 @@ describe('Forms API', () => {
     test('should return 500 on database error', async () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/forms/1');
+      const response = await request(app).get('/api/forms/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch form');
     });
@@ -116,6 +127,7 @@ describe('Forms API', () => {
 
       const response = await request(app)
         .post('/api/forms')
+        .set('Authorization', `Bearer ${authToken}`)
         .field('title', 'Test Form')
         .field('description', 'A test form')
         .field('fields', JSON.stringify([{ type: 'text', label: 'Name' }]))
@@ -135,6 +147,7 @@ describe('Forms API', () => {
 
       const response = await request(app)
         .post('/api/forms')
+        .set('Authorization', `Bearer ${authToken}`)
         .field('title', 'Test Form')
         .field('description', 'A test form')
         .field('fields', JSON.stringify([{ type: 'text', label: 'Name' }]));
@@ -150,6 +163,7 @@ describe('Forms API', () => {
 
       const response = await request(app)
         .put('/api/forms/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .field('title', 'Updated Form')
         .field('description', 'Updated description')
         .field('fields', JSON.stringify([{ type: 'text', label: 'Full Name' }]));
@@ -167,6 +181,7 @@ describe('Forms API', () => {
 
       const response = await request(app)
         .put('/api/forms/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .field('title', 'Updated Form')
         .field('description', 'Updated description')
         .field('fields', JSON.stringify([{ type: 'text', label: 'Name' }]));
@@ -181,7 +196,8 @@ describe('Forms API', () => {
       mockDb.get.mockResolvedValue({ uploaded_file_path: null });
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).delete('/api/forms/1');
+      const response = await request(app).delete('/api/forms/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Form deleted successfully');
       expect(fs.unlinkSync).not.toHaveBeenCalled();
@@ -192,7 +208,8 @@ describe('Forms API', () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
       fs.existsSync.mockReturnValue(true);
 
-      const response = await request(app).delete('/api/forms/1');
+      const response = await request(app).delete('/api/forms/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Form deleted successfully');
       expect(fs.existsSync).toHaveBeenCalled();
@@ -202,7 +219,8 @@ describe('Forms API', () => {
     test('should return 500 on database error', async () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).delete('/api/forms/1');
+      const response = await request(app).delete('/api/forms/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to delete form');
     });
@@ -214,6 +232,7 @@ describe('Forms API', () => {
 
       const response = await request(app)
         .post('/api/forms/form-1/submit')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           data: { name: 'John Doe', email: 'john@example.com' },
           signature: 'sig-data',
@@ -230,6 +249,7 @@ describe('Forms API', () => {
 
       const response = await request(app)
         .post('/api/forms/form-1/submit')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           data: { name: 'John Doe' }
         });
@@ -247,7 +267,8 @@ describe('Forms API', () => {
       ];
       mockDb.query.mockResolvedValue(mockSubmissions);
 
-      const response = await request(app).get('/api/forms/form-1/submissions');
+      const response = await request(app).get('/api/forms/form-1/submissions')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -258,7 +279,8 @@ describe('Forms API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/forms/form-1/submissions');
+      const response = await request(app).get('/api/forms/form-1/submissions')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch submissions');
     });
