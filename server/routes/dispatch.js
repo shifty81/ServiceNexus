@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { emitEvent, validateRequired } = require('../utils/routeHelpers');
 
 // Get all dispatches
 router.get('/', async (req, res) => {
@@ -44,7 +45,12 @@ router.post('/', async (req, res) => {
       priority,
       due_date
     } = req.body;
-    
+
+    const validationError = validateRequired(req.body, ['title']);
+    if (validationError) {
+      return res.status(400).json({ error: validationError });
+    }
+
     const id = uuidv4();
 
     await db.run(
@@ -65,8 +71,7 @@ router.post('/', async (req, res) => {
       ]
     );
 
-    const io = req.app.get('io');
-    io.emit('dispatch-changed', { action: 'created', id });
+    emitEvent(req, 'dispatch-changed', { action: 'created', id });
 
     res.status(201).json({ id, title, description, address });
   } catch (error) {
@@ -109,8 +114,7 @@ router.put('/:id', async (req, res) => {
       ]
     );
 
-    const io = req.app.get('io');
-    io.emit('dispatch-changed', { action: 'updated', id: req.params.id });
+    emitEvent(req, 'dispatch-changed', { action: 'updated', id: req.params.id });
 
     res.json({ id: req.params.id, message: 'Dispatch updated successfully' });
   } catch (error) {
@@ -127,8 +131,7 @@ router.post('/:id/complete', async (req, res) => {
       ['completed', req.params.id]
     );
 
-    const io = req.app.get('io');
-    io.emit('dispatch-changed', { action: 'completed', id: req.params.id });
+    emitEvent(req, 'dispatch-changed', { action: 'completed', id: req.params.id });
 
     res.json({ message: 'Dispatch completed successfully' });
   } catch (error) {
@@ -142,8 +145,7 @@ router.delete('/:id', async (req, res) => {
   try {
     await db.run('DELETE FROM dispatches WHERE id = ?', [req.params.id]);
 
-    const io = req.app.get('io');
-    io.emit('dispatch-changed', { action: 'deleted', id: req.params.id });
+    emitEvent(req, 'dispatch-changed', { action: 'deleted', id: req.params.id });
 
     res.json({ message: 'Dispatch deleted successfully' });
   } catch (error) {

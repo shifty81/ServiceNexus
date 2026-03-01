@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { emitEvent, validateRequired } = require('../utils/routeHelpers');
 
 // Get all inventory items
 router.get('/', async (req, res) => {
@@ -42,7 +43,12 @@ router.post('/', async (req, res) => {
       location,
       updated_by
     } = req.body;
-    
+
+    const validationError = validateRequired(req.body, ['name']);
+    if (validationError) {
+      return res.status(400).json({ error: validationError });
+    }
+
     const id = uuidv4();
 
     await db.run(
@@ -61,8 +67,7 @@ router.post('/', async (req, res) => {
       ]
     );
 
-    const io = req.app.get('io');
-    io.emit('inventory-changed', { action: 'created', id });
+    emitEvent(req, 'inventory-changed', { action: 'created', id });
 
     res.status(201).json({ id, name, quantity });
   } catch (error) {
@@ -93,8 +98,7 @@ router.put('/:id', async (req, res) => {
       [name, description, quantity, unit, category, location, updated_by, req.params.id]
     );
 
-    const io = req.app.get('io');
-    io.emit('inventory-changed', { action: 'updated', id: req.params.id });
+    emitEvent(req, 'inventory-changed', { action: 'updated', id: req.params.id });
 
     res.json({ id: req.params.id, message: 'Item updated successfully' });
   } catch (error) {
@@ -118,8 +122,7 @@ router.patch('/:id/quantity', async (req, res) => {
 
     const item = await db.get('SELECT * FROM inventory WHERE id = ?', [req.params.id]);
 
-    const io = req.app.get('io');
-    io.emit('inventory-changed', { 
+    emitEvent(req, 'inventory-changed', { 
       action: 'quantity-updated', 
       id: req.params.id, 
       newQuantity: item.quantity 
@@ -137,8 +140,7 @@ router.delete('/:id', async (req, res) => {
   try {
     await db.run('DELETE FROM inventory WHERE id = ?', [req.params.id]);
 
-    const io = req.app.get('io');
-    io.emit('inventory-changed', { action: 'deleted', id: req.params.id });
+    emitEvent(req, 'inventory-changed', { action: 'deleted', id: req.params.id });
 
     res.json({ message: 'Item deleted successfully' });
   } catch (error) {
