@@ -1,4 +1,4 @@
-# FormForce - Feature Summary
+# FieldForge - Feature Summary
 
 ## 🎉 What Was Built
 
@@ -265,8 +265,8 @@ client/src/
 ### Quick Start
 ```bash
 # 1. Clone repository
-git clone https://github.com/shifty81/FormForce.git
-cd FormForce
+git clone https://github.com/shifty81/FieldForge.git
+cd FieldForge
 
 # 2. Install dependencies
 npm install
@@ -373,7 +373,7 @@ Beyond the requirements, we also added:
 
 ## 🎬 Ready for Production
 
-The FormForce platform is:
+The FieldForge platform is:
 - ✅ Fully functional
 - ✅ Well documented
 - ✅ Security hardened

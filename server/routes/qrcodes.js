@@ -8,7 +8,7 @@ router.post('/generate', async (req, res) => {
   try {
     const { customer_id, location_name } = req.body;
     const id = uuidv4();
-    const qr_code_data = `FORMFORCE-${id}`;
+    const qr_code_data = `FIELDFORGE-${id}`;
 
     await db.run(
       `INSERT INTO qr_codes (id, customer_id, qr_code_data, location_name)

@@ -198,7 +198,7 @@ router.post('/:id/test', async (req, res) => {
       event: 'webhook.test',
       timestamp: new Date().toISOString(),
       data: {
-        message: 'This is a test webhook delivery from FormForce'
+        message: 'This is a test webhook delivery from FieldForge'
       }
     };
 
@@ -266,9 +266,9 @@ async function deliverWebhook(webhook, payload) {
     const response = await axios.post(webhook.url, payload, {
       headers: {
         'Content-Type': 'application/json',
-        'X-FormForce-Signature': signature,
-        'X-FormForce-Delivery': deliveryId,
-        'X-FormForce-Event': payload.event
+        'X-FieldForge-Signature': signature,
+        'X-FieldForge-Delivery': deliveryId,
+        'X-FieldForge-Event': payload.event
       },
       timeout: WEBHOOK_TIMEOUT_MS
     });

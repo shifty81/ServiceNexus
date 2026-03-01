@@ -2,7 +2,7 @@
 
 ## 🎉 Overview
 
-Successfully implemented the **Integrations Framework** for FormForce, establishing the foundation for Phase 3 integrations with external systems like QuickBooks, Salesforce, Google Workspace, and Procore.
+Successfully implemented the **Integrations Framework** for FieldForge, establishing the foundation for Phase 3 integrations with external systems like QuickBooks, Salesforce, Google Workspace, and Procore.
 
 ---
 
@@ -104,9 +104,9 @@ Successfully implemented the **Integrations Framework** for FormForce, establish
 ```
 
 **Security Headers:**
-- `X-FormForce-Signature` - HMAC signature for verification
-- `X-FormForce-Delivery` - Unique delivery ID
-- `X-FormForce-Event` - Event type
+- `X-FieldForge-Signature` - HMAC signature for verification
+- `X-FieldForge-Delivery` - Unique delivery ID
+- `X-FieldForge-Event` - Event type
 
 ---
 
@@ -325,9 +325,9 @@ Authorization: Bearer <token>
 ```
 POST https://example.com/webhook
 Content-Type: application/json
-X-FormForce-Signature: sha256=...
-X-FormForce-Delivery: uuid
-X-FormForce-Event: invoice.created
+X-FieldForge-Signature: sha256=...
+X-FieldForge-Delivery: uuid
+X-FieldForge-Event: invoice.created
 
 {
   "event": "invoice.created",
@@ -473,4 +473,4 @@ function verifyWebhook(payload, signature, secret) {
 
 ---
 
-*FormForce - Empowering field service businesses with AI* 🚀
+*FieldForge - Empowering field service businesses with AI* 🚀

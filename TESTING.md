@@ -1,6 +1,6 @@
-# FormForce - Testing Guide
+# FieldForge - Testing Guide
 
-This document provides comprehensive information about testing the FormForce application.
+This document provides comprehensive information about testing the FieldForge application.
 
 ## 📋 Table of Contents
 
@@ -16,7 +16,7 @@ This document provides comprehensive information about testing the FormForce app
 
 ## Overview
 
-FormForce uses a comprehensive testing strategy with:
+FieldForge uses a comprehensive testing strategy with:
 - **Backend Tests**: Jest for Node.js/Express API testing
 - **Frontend Tests**: React Testing Library with Jest
 - **Integration Tests**: Supertest for API endpoint testing
@@ -185,7 +185,7 @@ The CI pipeline:
 Add this badge to your README.md:
 
 ```markdown
-![CI/CD Pipeline](https://github.com/shifty81/FormForce/workflows/CI%2FCD%20Pipeline/badge.svg)
+![CI/CD Pipeline](https://github.com/shifty81/FieldForge/workflows/CI%2FCD%20Pipeline/badge.svg)
 ```
 
 ---

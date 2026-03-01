@@ -1,4 +1,4 @@
-# FormForce - Implementation Complete ✅
+# FieldForge - Implementation Complete ✅
 
 ## 🎉 Project Status: COMPLETE & SECURE
 
@@ -98,8 +98,8 @@ All documented in [FEATURES.md](FEATURES.md)
 ### Installation
 ```bash
 # Clone repository
-git clone https://github.com/shifty81/FormForce.git
-cd FormForce
+git clone https://github.com/shifty81/FieldForge.git
+cd FieldForge
 
 # Install all dependencies
 npm install
@@ -337,7 +337,7 @@ npm install && cd client && npm install
 
 ## ✨ Highlights
 
-**What Makes FormForce Special:**
+**What Makes FieldForge Special:**
 
 1. **Camera Scanner**: Industry-first camera-to-form conversion
 2. **Real-Time**: WebSocket sync across all features
@@ -366,7 +366,7 @@ npm install && cd client && npm install
 
 ## 🚀 Deploy Today
 
-FormForce is ready to transform your field service operations!
+FieldForge is ready to transform your field service operations!
 
 **Everything you asked for:**
 ✅ AI form creation from documents
@@ -387,4 +387,4 @@ FormForce is ready to transform your field service operations!
 
 For questions or issues, check the documentation or open a GitHub issue.
 
-**FormForce - Empowering field service businesses with AI** 🚀
+**FieldForge - Empowering field service businesses with AI** 🚀

@@ -24,6 +24,9 @@ import TechPortal from './pages/TechPortal';
 import Feedback from './pages/Feedback';
 import Analytics from './pages/Analytics';
 import SystemAdmin from './pages/SystemAdmin';
+import ApiDocs from './pages/ApiDocs';
+import SmartRouting from './pages/SmartRouting';
+import Maintenance from './pages/Maintenance';
 import { io } from 'socket.io-client';
 
 function App() {
@@ -97,6 +100,9 @@ function App() {
             <Route path="/feedback" element={<Feedback socket={socket} />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/system" element={<SystemAdmin socket={socket} />} />
+            <Route path="/api-docs" element={<ApiDocs />} />
+            <Route path="/smart-routing" element={<SmartRouting socket={socket} />} />
+            <Route path="/maintenance" element={<Maintenance socket={socket} />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

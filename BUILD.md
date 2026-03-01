@@ -1,6 +1,6 @@
-# FormForce - Build Guide
+# FieldForge - Build Guide
 
-Complete guide for building the FormForce application for development and production environments.
+Complete guide for building the FieldForge application for development and production environments.
 
 ## 📋 Table of Contents
 
@@ -126,7 +126,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 **Path Issues:**
 ```powershell
 # Make sure you're in the project root directory
-cd path\to\FormForce
+cd path\to\FieldForge
 .\build.ps1
 ```
 
@@ -139,7 +139,7 @@ cd path\to\FormForce
 
 ## Prerequisites
 
-Before building FormForce, ensure you have:
+Before building FieldForge, ensure you have:
 
 ### Required Software
 
@@ -176,8 +176,8 @@ For development with hot-reload:
 
 ```bash
 # Clone the repository
-git clone https://github.com/shifty81/FormForce.git
-cd FormForce
+git clone https://github.com/shifty81/FieldForge.git
+cd FieldForge
 
 # Install all dependencies
 npm run install-all
@@ -457,10 +457,10 @@ Build and run:
 
 ```bash
 # Build Docker image
-docker build -t formforce .
+docker build -t fieldforge .
 
 # Run container
-docker run -p 3001:3001 formforce
+docker run -p 3001:3001 fieldforge
 ```
 
 ### Platform-Specific Deployment
@@ -472,7 +472,7 @@ docker run -p 3001:3001 formforce
 heroku login
 
 # Create app
-heroku create formforce-app
+heroku create fieldforge-app
 
 # Deploy
 git push heroku main
@@ -489,8 +489,8 @@ heroku config:set NODE_ENV=production
 ssh user@your-server-ip
 
 # Clone repository
-git clone https://github.com/shifty81/FormForce.git
-cd FormForce
+git clone https://github.com/shifty81/FieldForge.git
+cd FieldForge
 
 # Install dependencies
 npm run install-all
@@ -500,7 +500,7 @@ npm run build:all
 
 # Setup PM2 for process management
 npm install -g pm2
-pm2 start server/index.js --name formforce
+pm2 start server/index.js --name fieldforge
 pm2 startup
 pm2 save
 ```

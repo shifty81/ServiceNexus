@@ -22,7 +22,7 @@ const createTestApp = () => {
   // API info endpoint
   app.get('/api', (req, res) => {
     res.json({
-      name: 'FormForce API',
+      name: 'FieldForge API',
       version: '1.0.0',
       endpoints: [
         '/api/auth',
@@ -56,7 +56,7 @@ describe('Server Health Check', () => {
   test('GET /api should return API information', async () => {
     const response = await request(app).get('/api');
     expect(response.status).toBe(200);
-    expect(response.body.name).toBe('FormForce API');
+    expect(response.body.name).toBe('FieldForge API');
     expect(response.body.version).toBeDefined();
     expect(Array.isArray(response.body.endpoints)).toBe(true);
   });
