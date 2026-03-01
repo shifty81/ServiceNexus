@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Calculate scores for all technicians using batch queries
 async function getTechnicianScores() {
@@ -140,7 +141,7 @@ async function assignServiceCall(serviceCallId, app) {
 }
 
 // GET / — Routing suggestions for unassigned pending service calls
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const unassignedCalls = await db.query(
       `SELECT sc.*, c.contact_name as customer_name
@@ -179,7 +180,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /auto-assign — Auto-assign a specific service call
-router.post('/auto-assign', async (req, res) => {
+router.post('/auto-assign', authenticateToken, async (req, res) => {
   try {
     const { service_call_id } = req.body;
 
@@ -201,7 +202,7 @@ router.post('/auto-assign', async (req, res) => {
 });
 
 // POST /auto-assign-all — Auto-assign all unassigned pending service calls
-router.post('/auto-assign-all', async (req, res) => {
+router.post('/auto-assign-all', authenticateToken, async (req, res) => {
   try {
     const unassignedCalls = await db.query(
       `SELECT id FROM service_calls
@@ -230,7 +231,7 @@ router.post('/auto-assign-all', async (req, res) => {
 });
 
 // GET /technician-scores — Current scores for all technicians
-router.get('/technician-scores', async (req, res) => {
+router.get('/technician-scores', authenticateToken, async (req, res) => {
   try {
     const scores = await getTechnicianScores();
     res.json(scores);

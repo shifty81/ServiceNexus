@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -23,6 +27,8 @@ jest.mock('uuid', () => ({
 }));
 
 const customersRouter = require('./routes/customers');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -56,7 +62,8 @@ describe('Customers API', () => {
       ];
       mockDb.query.mockResolvedValue(mockCustomers);
 
-      const response = await request(app).get('/api/customers');
+      const response = await request(app).get('/api/customers')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -65,7 +72,8 @@ describe('Customers API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/customers');
+      const response = await request(app).get('/api/customers')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch customers');
     });
@@ -76,7 +84,8 @@ describe('Customers API', () => {
       const mockCustomer = { id: '1', contact_name: 'John Doe', company_name: 'Acme Corp' };
       mockDb.get.mockResolvedValue(mockCustomer);
 
-      const response = await request(app).get('/api/customers/1');
+      const response = await request(app).get('/api/customers/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.contact_name).toBe('John Doe');
     });
@@ -84,7 +93,8 @@ describe('Customers API', () => {
     test('should return 404 when customer not found', async () => {
       mockDb.get.mockResolvedValue(undefined);
 
-      const response = await request(app).get('/api/customers/999');
+      const response = await request(app).get('/api/customers/999')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Customer not found');
     });
@@ -92,7 +102,8 @@ describe('Customers API', () => {
     test('should return 500 on database error', async () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/customers/1');
+      const response = await request(app).get('/api/customers/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch customer');
     });
@@ -117,6 +128,7 @@ describe('Customers API', () => {
 
       const response = await request(app)
         .post('/api/customers')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           company_name: 'Acme Corp',
           contact_name: 'John Doe',
@@ -137,6 +149,7 @@ describe('Customers API', () => {
     test('should return 400 when contact_name is missing', async () => {
       const response = await request(app)
         .post('/api/customers')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ company_name: 'Acme Corp' });
 
       expect(response.status).toBe(400);
@@ -148,6 +161,7 @@ describe('Customers API', () => {
 
       const response = await request(app)
         .post('/api/customers')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ contact_name: 'John Doe' });
 
       expect(response.status).toBe(500);
@@ -174,6 +188,7 @@ describe('Customers API', () => {
 
       const response = await request(app)
         .put('/api/customers/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           company_name: 'Acme Corp Updated',
           contact_name: 'John Doe',
@@ -194,6 +209,7 @@ describe('Customers API', () => {
     test('should return 400 when contact_name is missing', async () => {
       const response = await request(app)
         .put('/api/customers/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ company_name: 'Acme Corp' });
 
       expect(response.status).toBe(400);
@@ -205,6 +221,7 @@ describe('Customers API', () => {
 
       const response = await request(app)
         .put('/api/customers/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ contact_name: 'John Doe' });
 
       expect(response.status).toBe(500);
@@ -216,7 +233,8 @@ describe('Customers API', () => {
     test('should delete a customer successfully', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).delete('/api/customers/1');
+      const response = await request(app).delete('/api/customers/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Customer deleted successfully');
       expect(app.get('io').emit).toHaveBeenCalledWith('customer:deleted', '1');
@@ -225,7 +243,8 @@ describe('Customers API', () => {
     test('should return 500 on database error', async () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).delete('/api/customers/1');
+      const response = await request(app).delete('/api/customers/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to delete customer');
     });
@@ -238,7 +257,8 @@ describe('Customers API', () => {
       ];
       mockDb.query.mockResolvedValue(mockCustomers);
 
-      const response = await request(app).get('/api/customers/search/John');
+      const response = await request(app).get('/api/customers/search/John')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(1);
@@ -248,7 +268,8 @@ describe('Customers API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/customers/search/test');
+      const response = await request(app).get('/api/customers/search/test')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to search customers');
     });

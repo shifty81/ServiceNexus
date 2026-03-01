@@ -6,6 +6,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -22,6 +26,8 @@ jest.mock('uuid', () => ({
 }));
 
 const agreementsRouter = require('./routes/agreements');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -53,7 +59,8 @@ describe('Service Agreements API', () => {
       ];
       mockDb.query.mockResolvedValue(mockAgreements);
 
-      const response = await request(app).get('/api/agreements');
+      const response = await request(app).get('/api/agreements')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(1);
@@ -62,7 +69,8 @@ describe('Service Agreements API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/agreements');
+      const response = await request(app).get('/api/agreements')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch service agreements');
     });
@@ -73,7 +81,8 @@ describe('Service Agreements API', () => {
       const mockAgreement = { id: '1', title: 'Plumbing Contract', status: 'active' };
       mockDb.get.mockResolvedValue(mockAgreement);
 
-      const response = await request(app).get('/api/agreements/1');
+      const response = await request(app).get('/api/agreements/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.title).toBe('Plumbing Contract');
     });
@@ -81,14 +90,16 @@ describe('Service Agreements API', () => {
     test('should return 404 when agreement not found', async () => {
       mockDb.get.mockResolvedValue(undefined);
 
-      const response = await request(app).get('/api/agreements/999');
+      const response = await request(app).get('/api/agreements/999')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(404);
     });
 
     test('should return 500 on database error', async () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/agreements/1');
+      const response = await request(app).get('/api/agreements/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
     });
   });
@@ -107,6 +118,7 @@ describe('Service Agreements API', () => {
 
       const response = await request(app)
         .post('/api/agreements')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           customer_id: 'c1',
           title: 'HVAC Maintenance',
@@ -121,6 +133,7 @@ describe('Service Agreements API', () => {
     test('should return 400 when required fields missing', async () => {
       const response = await request(app)
         .post('/api/agreements')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ title: 'Test' });
 
       expect(response.status).toBe(400);
@@ -131,6 +144,7 @@ describe('Service Agreements API', () => {
 
       const response = await request(app)
         .post('/api/agreements')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ customer_id: 'c1', title: 'Test', start_date: '2026-01-01' });
 
       expect(response.status).toBe(500);
@@ -145,6 +159,7 @@ describe('Service Agreements API', () => {
 
       const response = await request(app)
         .put('/api/agreements/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ title: 'Updated Agreement', status: 'expired' });
 
       expect(response.status).toBe(200);
@@ -156,6 +171,7 @@ describe('Service Agreements API', () => {
 
       const response = await request(app)
         .put('/api/agreements/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ title: 'Test' });
 
       expect(response.status).toBe(500);
@@ -166,7 +182,8 @@ describe('Service Agreements API', () => {
     test('should delete an agreement', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).delete('/api/agreements/1');
+      const response = await request(app).delete('/api/agreements/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Service agreement deleted successfully');
     });
@@ -174,7 +191,8 @@ describe('Service Agreements API', () => {
     test('should return 500 on database error', async () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).delete('/api/agreements/1');
+      const response = await request(app).delete('/api/agreements/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
     });
   });
@@ -183,7 +201,8 @@ describe('Service Agreements API', () => {
     test('should return agreements for a customer', async () => {
       mockDb.query.mockResolvedValue([{ id: '1', customer_id: 'c1', title: 'Test' }]);
 
-      const response = await request(app).get('/api/agreements/customer/c1');
+      const response = await request(app).get('/api/agreements/customer/c1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(1);
     });
@@ -191,7 +210,8 @@ describe('Service Agreements API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/agreements/customer/c1');
+      const response = await request(app).get('/api/agreements/customer/c1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
     });
   });

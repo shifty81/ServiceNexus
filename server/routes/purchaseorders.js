@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Generate unique PO number
 async function generatePONumber() {
@@ -42,7 +43,7 @@ function calculatePOTotals(line_items) {
 
 
 // Get all purchase orders
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const { status, service_call_id } = req.query;
     let query = `
@@ -80,7 +81,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single purchase order
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const purchaseOrder = await db.get(`
       SELECT po.*, 
@@ -106,7 +107,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create purchase order
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       service_call_id,
@@ -153,7 +154,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update purchase order
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const {
       service_call_id,
@@ -198,7 +199,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Approve purchase order
-router.post('/:id/approve', async (req, res) => {
+router.post('/:id/approve', authenticateToken, async (req, res) => {
   try {
     const { approved_by } = req.body;
 
@@ -224,7 +225,7 @@ router.post('/:id/approve', async (req, res) => {
 });
 
 // Reject purchase order
-router.post('/:id/reject', async (req, res) => {
+router.post('/:id/reject', authenticateToken, async (req, res) => {
   try {
     await db.run(
       `UPDATE purchase_orders 
@@ -248,7 +249,7 @@ router.post('/:id/reject', async (req, res) => {
 });
 
 // Mark as received
-router.post('/:id/receive', async (req, res) => {
+router.post('/:id/receive', authenticateToken, async (req, res) => {
   try {
     await db.run(
       `UPDATE purchase_orders 
@@ -272,7 +273,7 @@ router.post('/:id/receive', async (req, res) => {
 });
 
 // Delete purchase order
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM purchase_orders WHERE id = ?', [req.params.id]);
     

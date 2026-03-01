@@ -8,7 +8,7 @@ const { authenticateToken } = require('../middleware/auth');
 // Get notifications for a user
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const userId = req.query.user_id || req.user.id;
+    const userId = req.user.id;
     const unreadOnly = req.query.unread === 'true';
 
     let sql = `
@@ -101,6 +101,9 @@ router.put('/read-all/:userId', authenticateToken, async (req, res) => {
 // Get unread count for a user
 router.get('/unread-count/:userId', authenticateToken, async (req, res) => {
   try {
+    if (req.params.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Can only view your own notification count' });
+    }
     const result = await db.get(
       'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0',
       [req.params.userId]

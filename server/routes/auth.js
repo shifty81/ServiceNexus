@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -79,7 +80,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Get all users (for dropdowns, etc.)
-router.get('/users', async (req, res) => {
+router.get('/users', authenticateToken, async (req, res) => {
   try {
     const users = await db.query('SELECT id, username, email, role, user_type FROM users ORDER BY username');
     res.json(users);

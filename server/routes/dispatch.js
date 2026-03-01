@@ -3,9 +3,10 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 const { emitEvent, validateRequired } = require('../utils/routeHelpers');
+const { authenticateToken } = require('../middleware/auth');
 
 // Get all dispatches
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const dispatches = await db.query(
       'SELECT * FROM dispatches ORDER BY created_at DESC'
@@ -18,7 +19,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single dispatch
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const dispatch = await db.get('SELECT * FROM dispatches WHERE id = ?', [req.params.id]);
     if (!dispatch) {
@@ -32,7 +33,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create dispatch
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       title,
@@ -81,7 +82,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update dispatch
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const {
       title,
@@ -124,7 +125,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Complete dispatch
-router.post('/:id/complete', async (req, res) => {
+router.post('/:id/complete', authenticateToken, async (req, res) => {
   try {
     await db.run(
       'UPDATE dispatches SET status = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?',
@@ -141,7 +142,7 @@ router.post('/:id/complete', async (req, res) => {
 });
 
 // Delete dispatch
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM dispatches WHERE id = ?', [req.params.id]);
 

@@ -7,6 +7,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { safeJsonParse } = require('../utils/routeHelpers');
+const { authenticateToken } = require('../middleware/auth');
 
 // Configure multer for document uploads
 const storage = multer.diskStorage({
@@ -42,7 +43,7 @@ const upload = multer({
 });
 
 // Get all forms
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const forms = await db.query('SELECT * FROM forms ORDER BY created_at DESC');
     res.json(forms.map(form => ({
@@ -57,7 +58,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single form
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const form = await db.get('SELECT * FROM forms WHERE id = ?', [req.params.id]);
     if (!form) {
@@ -75,7 +76,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create form (with optional file upload)
-router.post('/', upload.single('document'), async (req, res) => {
+router.post('/', authenticateToken, upload.single('document'), async (req, res) => {
   try {
     const { title, description, fields, field_positions, created_by } = req.body;
     const id = uuidv4();
@@ -109,7 +110,7 @@ router.post('/', upload.single('document'), async (req, res) => {
 });
 
 // Update form (with optional file upload)
-router.put('/:id', upload.single('document'), async (req, res) => {
+router.put('/:id', authenticateToken, upload.single('document'), async (req, res) => {
   try {
     const { title, description, fields, field_positions } = req.body;
     
@@ -147,7 +148,7 @@ router.put('/:id', upload.single('document'), async (req, res) => {
 });
 
 // Delete form
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     // Get the form to check if it has an uploaded file
     const form = await db.get('SELECT uploaded_file_path FROM forms WHERE id = ?', [req.params.id]);
@@ -169,7 +170,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Submit form
-router.post('/:id/submit', async (req, res) => {
+router.post('/:id/submit', authenticateToken, async (req, res) => {
   try {
     const { data, signature, submitted_by } = req.body;
     const id = uuidv4();
@@ -187,7 +188,7 @@ router.post('/:id/submit', async (req, res) => {
 });
 
 // Get form submissions
-router.get('/:id/submissions', async (req, res) => {
+router.get('/:id/submissions', authenticateToken, async (req, res) => {
   try {
     const submissions = await db.query(
       'SELECT * FROM form_submissions WHERE form_id = ? ORDER BY submitted_at DESC',

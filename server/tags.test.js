@@ -6,6 +6,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -22,6 +26,8 @@ jest.mock('uuid', () => ({
 }));
 
 const tagsRouter = require('./routes/tags');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -49,7 +55,8 @@ describe('Tags API', () => {
         { id: '2', name: 'Recurring', color: '#6366f1' }
       ]);
 
-      const response = await request(app).get('/api/tags');
+      const response = await request(app).get('/api/tags')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(2);
     });
@@ -57,7 +64,8 @@ describe('Tags API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/tags');
+      const response = await request(app).get('/api/tags')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
     });
   });
@@ -70,6 +78,7 @@ describe('Tags API', () => {
 
       const response = await request(app)
         .post('/api/tags')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ name: 'VIP', color: '#ef4444' });
 
       expect(response.status).toBe(201);
@@ -79,6 +88,7 @@ describe('Tags API', () => {
     test('should return 400 when name is missing', async () => {
       const response = await request(app)
         .post('/api/tags')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ color: '#ef4444' });
 
       expect(response.status).toBe(400);
@@ -91,6 +101,7 @@ describe('Tags API', () => {
 
       const response = await request(app)
         .post('/api/tags')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ name: 'Test' });
 
       expect(response.status).toBe(201);
@@ -101,6 +112,7 @@ describe('Tags API', () => {
 
       const response = await request(app)
         .post('/api/tags')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ name: 'Test' });
 
       expect(response.status).toBe(500);
@@ -115,6 +127,7 @@ describe('Tags API', () => {
 
       const response = await request(app)
         .put('/api/tags/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ name: 'Updated', color: '#22c55e' });
 
       expect(response.status).toBe(200);
@@ -126,6 +139,7 @@ describe('Tags API', () => {
 
       const response = await request(app)
         .put('/api/tags/1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ name: 'Test' });
 
       expect(response.status).toBe(500);
@@ -136,7 +150,8 @@ describe('Tags API', () => {
     test('should delete a tag and its assignments', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).delete('/api/tags/1');
+      const response = await request(app).delete('/api/tags/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Tag deleted successfully');
       // Should call run twice: once for tag_assignments, once for tags
@@ -146,7 +161,8 @@ describe('Tags API', () => {
     test('should return 500 on database error', async () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).delete('/api/tags/1');
+      const response = await request(app).delete('/api/tags/1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
     });
   });
@@ -158,6 +174,7 @@ describe('Tags API', () => {
 
       const response = await request(app)
         .post('/api/tags/assign')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ tag_id: 't1', entity_type: 'customer', entity_id: 'c1' });
 
       expect(response.status).toBe(201);
@@ -168,6 +185,7 @@ describe('Tags API', () => {
 
       const response = await request(app)
         .post('/api/tags/assign')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ tag_id: 't1', entity_type: 'customer', entity_id: 'c1' });
 
       expect(response.status).toBe(409);
@@ -176,6 +194,7 @@ describe('Tags API', () => {
     test('should return 400 when required fields missing', async () => {
       const response = await request(app)
         .post('/api/tags/assign')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ tag_id: 't1' });
 
       expect(response.status).toBe(400);
@@ -186,6 +205,7 @@ describe('Tags API', () => {
 
       const response = await request(app)
         .post('/api/tags/assign')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ tag_id: 't1', entity_type: 'customer', entity_id: 'c1' });
 
       expect(response.status).toBe(500);
@@ -196,14 +216,16 @@ describe('Tags API', () => {
     test('should remove a tag assignment', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).delete('/api/tags/assign/t1/customer/c1');
+      const response = await request(app).delete('/api/tags/assign/t1/customer/c1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
     });
 
     test('should return 500 on database error', async () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).delete('/api/tags/assign/t1/customer/c1');
+      const response = await request(app).delete('/api/tags/assign/t1/customer/c1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
     });
   });
@@ -212,7 +234,8 @@ describe('Tags API', () => {
     test('should return tags for an entity', async () => {
       mockDb.query.mockResolvedValue([{ id: 't1', name: 'VIP', color: '#ef4444' }]);
 
-      const response = await request(app).get('/api/tags/entity/customer/c1');
+      const response = await request(app).get('/api/tags/entity/customer/c1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(1);
     });
@@ -220,7 +243,8 @@ describe('Tags API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/tags/entity/customer/c1');
+      const response = await request(app).get('/api/tags/entity/customer/c1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
     });
   });
@@ -231,7 +255,8 @@ describe('Tags API', () => {
         { tag_id: 't1', entity_type: 'customer', entity_id: 'c1' }
       ]);
 
-      const response = await request(app).get('/api/tags/t1/entities');
+      const response = await request(app).get('/api/tags/t1/entities')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(1);
     });
@@ -239,7 +264,8 @@ describe('Tags API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/tags/t1/entities');
+      const response = await request(app).get('/api/tags/t1/entities')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
     });
   });

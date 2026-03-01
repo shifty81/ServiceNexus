@@ -3,9 +3,10 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 const { validateRequired } = require('../utils/routeHelpers');
+const { authenticateToken } = require('../middleware/auth');
 
 // Get all tags
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const tags = await db.query('SELECT * FROM tags ORDER BY name ASC');
     res.json(tags);
@@ -16,7 +17,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create tag
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { name, color } = req.body;
 
@@ -40,7 +41,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update tag
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { name, color } = req.body;
     await db.run(
@@ -56,7 +57,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete tag (and its assignments)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM tag_assignments WHERE tag_id = ?', [req.params.id]);
     await db.run('DELETE FROM tags WHERE id = ?', [req.params.id]);
@@ -68,7 +69,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Assign tag to an entity (customer, dispatch, service_call)
-router.post('/assign', async (req, res) => {
+router.post('/assign', authenticateToken, async (req, res) => {
   try {
     const { tag_id, entity_type, entity_id } = req.body;
 
@@ -99,7 +100,7 @@ router.post('/assign', async (req, res) => {
 });
 
 // Remove tag from an entity
-router.delete('/assign/:tag_id/:entity_type/:entity_id', async (req, res) => {
+router.delete('/assign/:tag_id/:entity_type/:entity_id', authenticateToken, async (req, res) => {
   try {
     await db.run(
       'DELETE FROM tag_assignments WHERE tag_id = ? AND entity_type = ? AND entity_id = ?',
@@ -113,7 +114,7 @@ router.delete('/assign/:tag_id/:entity_type/:entity_id', async (req, res) => {
 });
 
 // Get tags for an entity
-router.get('/entity/:entity_type/:entity_id', async (req, res) => {
+router.get('/entity/:entity_type/:entity_id', authenticateToken, async (req, res) => {
   try {
     const tags = await db.query(`
       SELECT t.* FROM tags t
@@ -129,7 +130,7 @@ router.get('/entity/:entity_type/:entity_id', async (req, res) => {
 });
 
 // Get all entities for a tag
-router.get('/:id/entities', async (req, res) => {
+router.get('/:id/entities', authenticateToken, async (req, res) => {
   try {
     const assignments = await db.query(
       'SELECT * FROM tag_assignments WHERE tag_id = ?',

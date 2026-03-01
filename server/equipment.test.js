@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -23,6 +27,8 @@ jest.mock('uuid', () => ({
 }));
 
 const equipmentRouter = require('./routes/equipment');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -56,7 +62,8 @@ describe('Equipment API', () => {
       ];
       mockDb.query.mockResolvedValue(mockEquipment);
 
-      const response = await request(app).get('/api/equipment/servicecall/sc-1');
+      const response = await request(app).get('/api/equipment/servicecall/sc-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -65,7 +72,8 @@ describe('Equipment API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/equipment/servicecall/sc-1');
+      const response = await request(app).get('/api/equipment/servicecall/sc-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch equipment');
     });
@@ -79,7 +87,8 @@ describe('Equipment API', () => {
       ];
       mockDb.query.mockResolvedValue(mockEquipment);
 
-      const response = await request(app).get('/api/equipment/customer/cust-1');
+      const response = await request(app).get('/api/equipment/customer/cust-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -88,7 +97,8 @@ describe('Equipment API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/equipment/customer/cust-1');
+      const response = await request(app).get('/api/equipment/customer/cust-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch equipment');
     });
@@ -112,6 +122,7 @@ describe('Equipment API', () => {
 
       const response = await request(app)
         .post('/api/equipment')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           service_call_id: 'sc-1',
           customer_id: 'cust-1',
@@ -136,6 +147,7 @@ describe('Equipment API', () => {
 
       const response = await request(app)
         .post('/api/equipment')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           service_call_id: 'sc-1',
           customer_id: 'cust-1',
@@ -163,6 +175,7 @@ describe('Equipment API', () => {
 
       const response = await request(app)
         .put('/api/equipment/eq-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'Updated AC Unit',
           serial_number: 'SN001-U',
@@ -184,6 +197,7 @@ describe('Equipment API', () => {
 
       const response = await request(app)
         .put('/api/equipment/eq-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'Updated AC Unit'
         });
@@ -197,7 +211,8 @@ describe('Equipment API', () => {
     test('should delete equipment successfully', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).delete('/api/equipment/eq-1');
+      const response = await request(app).delete('/api/equipment/eq-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
 
@@ -208,7 +223,8 @@ describe('Equipment API', () => {
     test('should return 500 on database error', async () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).delete('/api/equipment/eq-1');
+      const response = await request(app).delete('/api/equipment/eq-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to delete equipment');
     });

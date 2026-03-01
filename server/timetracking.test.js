@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -23,6 +27,8 @@ jest.mock('uuid', () => ({
 }));
 
 const timetrackingRouter = require('./routes/timetracking');
+
+const authToken = jwt.sign({ id: 'user-1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -56,7 +62,8 @@ describe('Time Tracking API', () => {
       ];
       mockDb.query.mockResolvedValue(mockEntries);
 
-      const response = await request(app).get('/api/timetracking');
+      const response = await request(app).get('/api/timetracking')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -65,7 +72,8 @@ describe('Time Tracking API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/timetracking');
+      const response = await request(app).get('/api/timetracking')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch time entries');
     });
@@ -78,7 +86,8 @@ describe('Time Tracking API', () => {
       ];
       mockDb.query.mockResolvedValue(mockActive);
 
-      const response = await request(app).get('/api/timetracking/active');
+      const response = await request(app).get('/api/timetracking/active')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(1);
@@ -87,7 +96,8 @@ describe('Time Tracking API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/timetracking/active');
+      const response = await request(app).get('/api/timetracking/active')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch active entries');
     });
@@ -100,7 +110,8 @@ describe('Time Tracking API', () => {
       ];
       mockDb.query.mockResolvedValue(mockEntries);
 
-      const response = await request(app).get('/api/timetracking/user/u1');
+      const response = await request(app).get('/api/timetracking/user/u1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(1);
@@ -109,7 +120,8 @@ describe('Time Tracking API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/timetracking/user/u1');
+      const response = await request(app).get('/api/timetracking/user/u1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch user time entries');
     });
@@ -122,7 +134,8 @@ describe('Time Tracking API', () => {
       ];
       mockDb.query.mockResolvedValue(mockPayroll);
 
-      const response = await request(app).get('/api/timetracking/payroll');
+      const response = await request(app).get('/api/timetracking/payroll')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body[0].total_hours).toBe(40);
@@ -132,7 +145,8 @@ describe('Time Tracking API', () => {
       mockDb.query.mockResolvedValue([]);
 
       const response = await request(app)
-        .get('/api/timetracking/payroll?startDate=2024-01-01&endDate=2024-01-31&userId=u1');
+        .get('/api/timetracking/payroll?startDate=2024-01-01&endDate=2024-01-31&userId=u1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(mockDb.query).toHaveBeenCalledWith(
         expect.stringContaining('AND te.clock_in >= ?'),
@@ -143,7 +157,8 @@ describe('Time Tracking API', () => {
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/timetracking/payroll');
+      const response = await request(app).get('/api/timetracking/payroll')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to fetch payroll data');
     });
@@ -165,6 +180,7 @@ describe('Time Tracking API', () => {
 
       const response = await request(app)
         .post('/api/timetracking/clock-in')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ user_id: 'u1', hourly_rate: 20 });
 
       expect(response.status).toBe(201);
@@ -177,6 +193,7 @@ describe('Time Tracking API', () => {
     test('should return 400 if user_id is missing', async () => {
       const response = await request(app)
         .post('/api/timetracking/clock-in')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({});
 
       expect(response.status).toBe(400);
@@ -188,6 +205,7 @@ describe('Time Tracking API', () => {
 
       const response = await request(app)
         .post('/api/timetracking/clock-in')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ user_id: 'u1' });
 
       expect(response.status).toBe(400);
@@ -199,6 +217,7 @@ describe('Time Tracking API', () => {
 
       const response = await request(app)
         .post('/api/timetracking/clock-in')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ user_id: 'u1' });
 
       expect(response.status).toBe(500);
@@ -232,6 +251,7 @@ describe('Time Tracking API', () => {
 
       const response = await request(app)
         .post('/api/timetracking/clock-out/entry-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ break_duration: 0 });
 
       expect(response.status).toBe(200);
@@ -245,6 +265,7 @@ describe('Time Tracking API', () => {
 
       const response = await request(app)
         .post('/api/timetracking/clock-out/nonexistent')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({});
 
       expect(response.status).toBe(404);
@@ -260,6 +281,7 @@ describe('Time Tracking API', () => {
 
       const response = await request(app)
         .post('/api/timetracking/clock-out/entry-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({});
 
       expect(response.status).toBe(400);
@@ -271,6 +293,7 @@ describe('Time Tracking API', () => {
 
       const response = await request(app)
         .post('/api/timetracking/clock-out/entry-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({});
 
       expect(response.status).toBe(500);
@@ -305,6 +328,7 @@ describe('Time Tracking API', () => {
 
       const response = await request(app)
         .put('/api/timetracking/entry-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ notes: 'Updated notes' });
 
       expect(response.status).toBe(200);
@@ -340,6 +364,7 @@ describe('Time Tracking API', () => {
 
       const response = await request(app)
         .put('/api/timetracking/entry-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           clock_in: '2024-01-01T09:00:00Z',
           clock_out: '2024-01-01T17:00:00Z'
@@ -357,6 +382,7 @@ describe('Time Tracking API', () => {
 
       const response = await request(app)
         .put('/api/timetracking/nonexistent')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ notes: 'test' });
 
       expect(response.status).toBe(404);
@@ -368,6 +394,7 @@ describe('Time Tracking API', () => {
 
       const response = await request(app)
         .put('/api/timetracking/entry-1')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ notes: 'test' });
 
       expect(response.status).toBe(500);
@@ -381,7 +408,8 @@ describe('Time Tracking API', () => {
       mockDb.get.mockResolvedValueOnce(existingEntry);
       mockDb.run.mockResolvedValue({ id: 1 });
 
-      const response = await request(app).delete('/api/timetracking/entry-1');
+      const response = await request(app).delete('/api/timetracking/entry-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Time entry deleted successfully');
 
@@ -392,7 +420,8 @@ describe('Time Tracking API', () => {
     test('should return 404 if entry not found', async () => {
       mockDb.get.mockResolvedValueOnce(undefined);
 
-      const response = await request(app).delete('/api/timetracking/nonexistent');
+      const response = await request(app).delete('/api/timetracking/nonexistent')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Time entry not found');
     });
@@ -400,7 +429,8 @@ describe('Time Tracking API', () => {
     test('should return 500 on database error', async () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).delete('/api/timetracking/entry-1');
+      const response = await request(app).delete('/api/timetracking/entry-1')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to delete time entry');
     });

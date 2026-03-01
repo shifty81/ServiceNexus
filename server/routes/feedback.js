@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 const MAX_COMMENT_LENGTH = 1000;
 
 // Get all feedback (admin view)
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const feedback = await db.query(`
       SELECT f.*, 
@@ -27,7 +28,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get feedback for a specific service call
-router.get('/servicecall/:serviceCallId', async (req, res) => {
+router.get('/servicecall/:serviceCallId', authenticateToken, async (req, res) => {
   try {
     const feedback = await db.get(`
       SELECT f.*, 
@@ -46,7 +47,7 @@ router.get('/servicecall/:serviceCallId', async (req, res) => {
 });
 
 // Get feedback for a specific technician
-router.get('/technician/:technicianId', async (req, res) => {
+router.get('/technician/:technicianId', authenticateToken, async (req, res) => {
   try {
     const feedback = await db.query(`
       SELECT f.*, 
@@ -77,7 +78,7 @@ router.get('/technician/:technicianId', async (req, res) => {
 });
 
 // Submit feedback for a completed service call
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { service_call_id, technician_id, rating, comment, submitted_by } = req.body;
 
@@ -138,7 +139,7 @@ router.post('/', async (req, res) => {
 });
 
 // Get summary stats for all technicians (admin view)
-router.get('/stats/summary', async (req, res) => {
+router.get('/stats/summary', authenticateToken, async (req, res) => {
   try {
     const stats = await db.query(`
       SELECT 

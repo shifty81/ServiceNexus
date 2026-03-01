@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Get all service calls
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const serviceCalls = await db.query(`
       SELECT sc.*, 
@@ -25,7 +26,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single service call with details
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const serviceCall = await db.get(`
       SELECT sc.*, 
@@ -95,7 +96,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create service call
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { title, description, customer_id, assigned_to, status, priority, due_date, created_by } = req.body;
     const id = uuidv4();
@@ -121,7 +122,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update service call
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { title, description, customer_id, assigned_to, status, priority, due_date } = req.body;
     
@@ -148,7 +149,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Complete service call
-router.post('/:id/complete', async (req, res) => {
+router.post('/:id/complete', authenticateToken, async (req, res) => {
   try {
     await db.run(
       `UPDATE service_calls 
@@ -172,7 +173,7 @@ router.post('/:id/complete', async (req, res) => {
 });
 
 // Delete service call
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM service_calls WHERE id = ?', [req.params.id]);
     
@@ -189,7 +190,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Add comment to service call
-router.post('/:id/comments', async (req, res) => {
+router.post('/:id/comments', authenticateToken, async (req, res) => {
   try {
     const { user_id, comment } = req.body;
     const id = uuidv4();
@@ -223,7 +224,7 @@ router.post('/:id/comments', async (req, res) => {
 });
 
 // Get comments for service call
-router.get('/:id/comments', async (req, res) => {
+router.get('/:id/comments', authenticateToken, async (req, res) => {
   try {
     const comments = await db.query(`
       SELECT c.*, u.username, u.user_type

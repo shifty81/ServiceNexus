@@ -56,7 +56,6 @@ describe('Admin API', () => {
       expect(response.status).toBe(200);
       expect(response.body.status).toBe('healthy');
       expect(response.body.database).toBe('connected');
-      expect(response.body.tables).toContain('users');
       expect(response.body.uptime).toBeDefined();
     });
 

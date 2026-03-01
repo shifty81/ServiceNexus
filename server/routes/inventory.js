@@ -3,9 +3,10 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 const { emitEvent, validateRequired } = require('../utils/routeHelpers');
+const { authenticateToken } = require('../middleware/auth');
 
 // Get all inventory items
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const items = await db.query(
       'SELECT * FROM inventory ORDER BY name ASC'
@@ -18,7 +19,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single inventory item
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const item = await db.get('SELECT * FROM inventory WHERE id = ?', [req.params.id]);
     if (!item) {
@@ -32,7 +33,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create inventory item
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       name,
@@ -77,7 +78,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update inventory item
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const {
       name,
@@ -108,9 +109,13 @@ router.put('/:id', async (req, res) => {
 });
 
 // Update quantity (for quick adjustments)
-router.patch('/:id/quantity', async (req, res) => {
+router.patch('/:id/quantity', authenticateToken, async (req, res) => {
   try {
     const { adjustment, updated_by } = req.body;
+
+    if (adjustment === undefined || adjustment === null || !Number.isFinite(Number(adjustment))) {
+      return res.status(400).json({ error: 'A valid numeric adjustment is required' });
+    }
     
     await db.run(
       `UPDATE inventory 
@@ -136,7 +141,7 @@ router.patch('/:id/quantity', async (req, res) => {
 });
 
 // Delete inventory item
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM inventory WHERE id = ?', [req.params.id]);
 
