@@ -89,6 +89,7 @@ router.get('/technician/:userId', async (req, res) => {
              WHEN 'high' THEN 2
              WHEN 'normal' THEN 3
              WHEN 'low' THEN 4
+             ELSE 5
            END,
            sc.due_date ASC`,
         [userId]
