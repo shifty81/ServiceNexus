@@ -36,10 +36,10 @@ describe('API Docs', () => {
       expect(response.body.tags).toBeDefined();
     });
 
-    test("spec should have info.title as 'FieldForge API'", async () => {
+    test("spec should have info.title as 'ServiceNexus API'", async () => {
       const response = await request(app).get('/api/docs');
       expect(response.status).toBe(200);
-      expect(response.body.info.title).toBe('FieldForge API');
+      expect(response.body.info.title).toBe('ServiceNexus API');
       expect(response.body.info.version).toBeDefined();
       expect(response.body.info.description).toBeDefined();
     });

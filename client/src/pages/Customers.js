@@ -410,7 +410,7 @@ function Customers({ socket }) {
                   <div className="qr-text-display">
                     {selectedCustomer.qrCode.qr_code_data}
                   </div>
-                  <p><small>Scan with FieldForge app or enter this code manually</small></p>
+                  <p><small>Scan with ServiceNexus app or enter this code manually</small></p>
                 </div>
               </div>
             </div>

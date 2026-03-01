@@ -1,5 +1,5 @@
 {
-  "name": "fieldforge-client",
+  "name": "servicenexus-client",
   "version": "1.0.0",
   "private": true,
   "dependencies": {

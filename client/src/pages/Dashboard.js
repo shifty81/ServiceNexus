@@ -78,7 +78,7 @@ function Dashboard({ socket }) {
       <div className="container">
         <div className="dashboard-header">
           <h1>Dashboard</h1>
-          <p>Welcome to FieldForge - AI-Powered Mobile Forms</p>
+          <p>Welcome to ServiceNexus - AI-Powered Mobile Forms</p>
         </div>
 
         <div className="stats-grid">
@@ -177,7 +177,7 @@ function Dashboard({ socket }) {
 
         <div className="features-showcase">
           <div className="card">
-            <div className="card-header">FieldForge 2026 Features</div>
+            <div className="card-header">ServiceNexus 2026 Features</div>
             <div className="features-grid">
               <div className="feature-item">
                 <div className="feature-icon">🤖</div>

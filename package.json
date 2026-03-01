@@ -1,7 +1,7 @@
 {
-  "name": "fieldforge",
+  "name": "servicenexus",
   "version": "1.0.0",
-  "description": "FieldForge - AI-Powered Field Service Management Platform with forms, dispatching, CRM, invoicing, inventory tracking, and more",
+  "description": "ServiceNexus - AI-Powered Field Service Management Platform with forms, dispatching, CRM, invoicing, inventory tracking, and more",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",

@@ -107,7 +107,7 @@ function ApiDocs() {
       <div className="container">
         <div className="page-header">
           <h1>API Documentation</h1>
-          <p className="subtitle">Browse and explore the FieldForge REST API</p>
+          <p className="subtitle">Browse and explore the ServiceNexus REST API</p>
         </div>
 
         <div className="api-info-cards">

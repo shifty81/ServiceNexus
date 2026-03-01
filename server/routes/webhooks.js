@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const axios = require('axios');
 const db = require('../database');
 const rateLimit = require('express-rate-limit');
+const { authenticateToken } = require('../middleware/auth');
 
 // Webhook delivery timeout in milliseconds
 const WEBHOOK_TIMEOUT_MS = 10000;
@@ -17,31 +18,6 @@ const webhookLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-
-// Authentication middleware
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-
-  const jwt = require('jsonwebtoken');
-  const JWT_SECRET = process.env.JWT_SECRET;
-  
-  if (!JWT_SECRET) {
-    console.error('WARNING: JWT_SECRET is not set in environment variables. Using insecure fallback.');
-  }
-
-  jwt.verify(token, JWT_SECRET || 'your-secret-key', (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid or expired token' });
-    }
-    req.user = user;
-    next();
-  });
-};
 
 // Apply authentication to all routes
 router.use(authenticateToken);
@@ -198,7 +174,7 @@ router.post('/:id/test', async (req, res) => {
       event: 'webhook.test',
       timestamp: new Date().toISOString(),
       data: {
-        message: 'This is a test webhook delivery from FieldForge'
+        message: 'This is a test webhook delivery from ServiceNexus'
       }
     };
 
@@ -266,9 +242,9 @@ async function deliverWebhook(webhook, payload) {
     const response = await axios.post(webhook.url, payload, {
       headers: {
         'Content-Type': 'application/json',
-        'X-FieldForge-Signature': signature,
-        'X-FieldForge-Delivery': deliveryId,
-        'X-FieldForge-Event': payload.event
+        'X-ServiceNexus-Signature': signature,
+        'X-ServiceNexus-Delivery': deliveryId,
+        'X-ServiceNexus-Event': payload.event
       },
       timeout: WEBHOOK_TIMEOUT_MS
     });

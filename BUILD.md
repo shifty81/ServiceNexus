@@ -1,6 +1,6 @@
-# FieldForge - Build Guide
+# ServiceNexus - Build Guide
 
-Complete guide for building the FieldForge application for development and production environments.
+Complete guide for building the ServiceNexus application for development and production environments.
 
 ## 📋 Table of Contents
 
@@ -126,7 +126,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 **Path Issues:**
 ```powershell
 # Make sure you're in the project root directory
-cd path\to\FieldForge
+cd path\to\ServiceNexus
 .\build.ps1
 ```
 
@@ -139,7 +139,7 @@ cd path\to\FieldForge
 
 ## Prerequisites
 
-Before building FieldForge, ensure you have:
+Before building ServiceNexus, ensure you have:
 
 ### Required Software
 
@@ -176,8 +176,8 @@ For development with hot-reload:
 
 ```bash
 # Clone the repository
-git clone https://github.com/shifty81/FieldForge.git
-cd FieldForge
+git clone https://github.com/shifty81/ServiceNexus.git
+cd ServiceNexus
 
 # Install all dependencies
 npm run install-all
@@ -457,10 +457,10 @@ Build and run:
 
 ```bash
 # Build Docker image
-docker build -t fieldforge .
+docker build -t servicenexus .
 
 # Run container
-docker run -p 3001:3001 fieldforge
+docker run -p 3001:3001 servicenexus
 ```
 
 ### Platform-Specific Deployment
@@ -472,7 +472,7 @@ docker run -p 3001:3001 fieldforge
 heroku login
 
 # Create app
-heroku create fieldforge-app
+heroku create servicenexus-app
 
 # Deploy
 git push heroku main
@@ -489,8 +489,8 @@ heroku config:set NODE_ENV=production
 ssh user@your-server-ip
 
 # Clone repository
-git clone https://github.com/shifty81/FieldForge.git
-cd FieldForge
+git clone https://github.com/shifty81/ServiceNexus.git
+cd ServiceNexus
 
 # Install dependencies
 npm run install-all
@@ -500,7 +500,7 @@ npm run build:all
 
 # Setup PM2 for process management
 npm install -g pm2
-pm2 start server/index.js --name fieldforge
+pm2 start server/index.js --name servicenexus
 pm2 startup
 pm2 save
 ```

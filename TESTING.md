@@ -1,6 +1,6 @@
-# FieldForge - Testing Guide
+# ServiceNexus - Testing Guide
 
-This document provides comprehensive information about testing the FieldForge application.
+This document provides comprehensive information about testing the ServiceNexus application.
 
 ## 📋 Table of Contents
 
@@ -16,7 +16,7 @@ This document provides comprehensive information about testing the FieldForge ap
 
 ## Overview
 
-FieldForge uses a comprehensive testing strategy with:
+ServiceNexus uses a comprehensive testing strategy with:
 - **Backend Tests**: Jest for Node.js/Express API testing
 - **Frontend Tests**: React Testing Library with Jest
 - **Integration Tests**: Supertest for API endpoint testing
@@ -185,7 +185,7 @@ The CI pipeline:
 Add this badge to your README.md:
 
 ```markdown
-![CI/CD Pipeline](https://github.com/shifty81/FieldForge/workflows/CI%2FCD%20Pipeline/badge.svg)
+![CI/CD Pipeline](https://github.com/shifty81/ServiceNexus/workflows/CI%2FCD%20Pipeline/badge.svg)
 ```
 
 ---

@@ -2,7 +2,7 @@
 
 ## 🎉 Overview
 
-Successfully implemented the **Integrations Framework** for FieldForge, establishing the foundation for Phase 3 integrations with external systems like QuickBooks, Salesforce, Google Workspace, and Procore.
+Successfully implemented the **Integrations Framework** for ServiceNexus, establishing the foundation for Phase 3 integrations with external systems like QuickBooks, Salesforce, Google Workspace, and Procore.
 
 ---
 
@@ -104,9 +104,9 @@ Successfully implemented the **Integrations Framework** for FieldForge, establis
 ```
 
 **Security Headers:**
-- `X-FieldForge-Signature` - HMAC signature for verification
-- `X-FieldForge-Delivery` - Unique delivery ID
-- `X-FieldForge-Event` - Event type
+- `X-ServiceNexus-Signature` - HMAC signature for verification
+- `X-ServiceNexus-Delivery` - Unique delivery ID
+- `X-ServiceNexus-Event` - Event type
 
 ---
 
@@ -325,9 +325,9 @@ Authorization: Bearer <token>
 ```
 POST https://example.com/webhook
 Content-Type: application/json
-X-FieldForge-Signature: sha256=...
-X-FieldForge-Delivery: uuid
-X-FieldForge-Event: invoice.created
+X-ServiceNexus-Signature: sha256=...
+X-ServiceNexus-Delivery: uuid
+X-ServiceNexus-Event: invoice.created
 
 {
   "event": "invoice.created",
@@ -473,4 +473,4 @@ function verifyWebhook(payload, signature, secret) {
 
 ---
 
-*FieldForge - Empowering field service businesses with AI* 🚀
+*ServiceNexus - Empowering field service businesses with AI* 🚀
