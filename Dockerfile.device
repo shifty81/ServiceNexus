@@ -1,0 +1,30 @@
+###############################################################################
+# ServiceNexus – Proprietary Device Simulator Image
+#
+# Builds a self-contained, proprietary container image that includes the
+# device-simulator script.  No external runtime dependencies are required —
+# everything is baked in at build time.
+#
+# This image is used by docker-compose.test.yml for every simulated device
+# (mobile, desktop, tablet).
+###############################################################################
+
+FROM node:18-alpine
+
+LABEL org.opencontainers.image.title="ServiceNexus Device Simulator" \
+      org.opencontainers.image.description="Proprietary device simulator for ServiceNexus VM test environment" \
+      org.opencontainers.image.vendor="ServiceNexus" \
+      org.opencontainers.image.source="https://github.com/shifty81/ServiceNexus" \
+      com.servicenexus.component="device-simulator" \
+      com.servicenexus.proprietary="true"
+
+WORKDIR /app
+
+# Copy only the simulator script — no external npm packages needed
+COPY scripts/device-simulator.js /app/device-simulator.js
+
+# Run as non-root for security
+RUN addgroup -S snexus && adduser -S snexus -G snexus
+USER snexus
+
+CMD ["node", "/app/device-simulator.js"]

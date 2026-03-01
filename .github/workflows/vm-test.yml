@@ -1,0 +1,41 @@
+name: VM Test Environment
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vm-device-simulation:
+    name: Multi-Device Simulation
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build and run VM test environment
+      run: |
+        chmod +x scripts/vm-test-env.sh
+        ./scripts/vm-test-env.sh
+
+    - name: Collect container logs
+      if: always()
+      run: |
+        docker compose -f docker-compose.test.yml -p servicenexus-vm-test logs --no-color > vm-test-logs.txt 2>&1 || true
+
+    - name: Upload VM test logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: vm-test-logs
+        path: vm-test-logs.txt
+        retention-days: 7

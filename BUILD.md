@@ -5,6 +5,8 @@ Complete guide for building the ServiceNexus application for development and pro
 ## 📋 Table of Contents
 
 - [Automated Build (Windows PowerShell)](#automated-build-windows-powershell)
+- [Automated Build (Linux / macOS)](#automated-build-linux--macos)
+- [VM Test Environment](#vm-test-environment)
 - [Prerequisites](#prerequisites)
 - [Development Build](#development-build)
 - [Production Build](#production-build)
@@ -134,6 +136,163 @@ cd path\to\ServiceNexus
 - Ensure Node.js is installed from https://nodejs.org/
 - Restart PowerShell after installation
 - Verify with: `node --version`
+
+---
+
+## Automated Build (Linux / macOS)
+
+### 🚀 One-Command Build
+
+For Linux and macOS users, we provide a Bash build script equivalent to the PowerShell script:
+
+```bash
+# Make it executable (first time only)
+chmod +x build.sh
+
+# Run the automated build script
+./build.sh
+```
+
+#### Build Script Options
+
+```bash
+# Build and start development servers immediately
+./build.sh --start-dev
+
+# Build for production deployment
+./build.sh --production
+
+# Skip dependency installation (if already installed)
+./build.sh --skip-install
+
+# Skip prerequisite checks
+./build.sh --skip-prereq-check
+
+# Skip the build step (install dependencies only)
+./build.sh --skip-build
+
+# Combine options
+./build.sh --skip-install --start-dev
+```
+
+---
+
+## VM Test Environment
+
+The VM test environment is a **fully proprietary, self-contained** Docker Compose setup.
+Every container — server and device simulators alike — is built from project-owned
+Dockerfiles at build time. No public images are pulled at runtime. All services
+communicate over an isolated internal Docker network with no outbound internet access,
+ensuring a secure and reproducible testing sandbox.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              servicenexus-internal (isolated)            │
+│                                                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │ device-mobile │  │device-desktop│  │ device-tablet │  │
+│  │  (technician) │  │ (dispatcher) │  │    (admin)    │  │
+│  │  Dockerfile.  │  │  Dockerfile. │  │  Dockerfile.  │  │
+│  │    device     │  │    device    │  │    device     │  │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │
+│         │                 │                  │          │
+│         └────────┬────────┘──────────────────┘          │
+│                  ▼                                      │
+│     ┌────────────────────────┐                          │
+│     │   servicenexus-server  │───── servicenexus-gateway │
+│     │      (Dockerfile)      │        (host port 3001)  │
+│     └────────────────────────┘                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Key Proprietary Features
+
+- **Custom Dockerfiles** — `Dockerfile` (server) and `Dockerfile.device` (simulators)
+  are both built from the project source; no external `image:` references
+- **Isolated network** — `servicenexus-internal` is marked `internal: true`, preventing
+  any outbound traffic from test containers
+- **Non-root execution** — the device simulator image runs as an unprivileged user
+- **Proprietary labels** — all images and networks carry `com.servicenexus.*` OCI labels
+  for identification and policy enforcement
+
+### Prerequisites
+
+- **Docker** and **Docker Compose** must be installed.
+
+### Quick Start
+
+```bash
+# Run the full multi-device simulation
+chmod +x scripts/vm-test-env.sh
+./scripts/vm-test-env.sh
+```
+
+This will:
+1. Build the proprietary server image (`servicenexus/server:test`) from `Dockerfile`
+2. Build the proprietary device image (`servicenexus/device-simulator:test`) from `Dockerfile.device`
+3. Create an isolated internal Docker network
+4. Start the server container with a health check
+5. Launch three device simulators (mobile, desktop, tablet)
+6. Run API interactions against the platform
+7. Report pass/fail results per device
+8. Tear down the environment automatically
+
+### Options
+
+```bash
+# Build images only (skip running the simulation)
+./scripts/vm-test-env.sh --build-only
+
+# Skip image build (use previously built images)
+./scripts/vm-test-env.sh --no-build
+
+# Keep containers running after tests finish
+./scripts/vm-test-env.sh --keep
+```
+
+### Docker Compose Configuration
+
+The test environment is defined in `docker-compose.test.yml`:
+
+| Service              | Image                                  | Role        | Description                                |
+|----------------------|----------------------------------------|-------------|--------------------------------------------|
+| servicenexus-server  | `servicenexus/server:test`             | Platform    | The ServiceNexus application under test    |
+| device-mobile        | `servicenexus/device-simulator:test`   | Technician  | Simulates a field technician on mobile     |
+| device-desktop       | `servicenexus/device-simulator:test`   | Dispatcher  | Simulates an office dispatcher on desktop  |
+| device-tablet        | `servicenexus/device-simulator:test`   | Admin       | Simulates an admin/supervisor on a tablet  |
+
+### CI Integration
+
+The simulation runs automatically in GitHub Actions via `.github/workflows/vm-test.yml`
+on every push and pull request to `main` or `develop`. Logs are uploaded as workflow
+artifacts for debugging.
+
+### Adding More Devices
+
+To simulate additional devices, add a new service to `docker-compose.test.yml`:
+
+```yaml
+device-extra:
+  build:
+    context: .
+    dockerfile: Dockerfile.device
+  image: servicenexus/device-simulator:test
+  labels:
+    com.servicenexus.proprietary: "true"
+    com.servicenexus.component: "device-simulator"
+  networks:
+    - servicenexus-internal
+  depends_on:
+    servicenexus-server:
+      condition: service_healthy
+  environment:
+    - SERVER_URL=http://servicenexus-server:3001
+    - DEVICE_ROLE=technician
+    - DEVICE_NAME=extra-device-1
+    - SIMULATE_COUNT=5
+```
 
 ---
 

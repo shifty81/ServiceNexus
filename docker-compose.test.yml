@@ -1,0 +1,132 @@
+###############################################################################
+# ServiceNexus – Proprietary VM Test Environment
+#
+# Fully self-contained, proprietary multi-device test environment.
+# Every container is built from project-owned Dockerfiles — no public images
+# are pulled at runtime.  All services communicate over an isolated internal
+# Docker network that is not exposed to the host.
+#
+# Usage:
+#   docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
+#
+#   Or via the helper script:
+#   ./scripts/vm-test-env.sh
+###############################################################################
+version: '3.8'
+
+# ── Isolated internal network ────────────────────────────────────────
+networks:
+  servicenexus-internal:
+    driver: bridge
+    internal: true          # no outbound internet access
+    labels:
+      com.servicenexus.proprietary: "true"
+      com.servicenexus.purpose: "vm-test-environment"
+
+  # Gateway network — only the server connects here so the health-check
+  # (which uses wget to localhost) can resolve, and the host can reach
+  # port 3001 for optional manual inspection.
+  servicenexus-gateway:
+    driver: bridge
+    labels:
+      com.servicenexus.proprietary: "true"
+
+services:
+  # ── Core ServiceNexus application ──────────────────────────────────
+  servicenexus-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: servicenexus/server:test
+    labels:
+      com.servicenexus.proprietary: "true"
+      com.servicenexus.component: "server"
+    ports:
+      - "3001:3001"
+    networks:
+      - servicenexus-internal
+      - servicenexus-gateway
+    environment:
+      - NODE_ENV=test
+      - PORT=3001
+      - JWT_SECRET=vm-test-secret-key-for-testing-only
+      - CORS_ORIGIN=*
+      - TRUST_PROXY=false
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX=1000
+    volumes:
+      - test-data:/app/data
+      - test-uploads:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/api/forms || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # ── Simulated field-technician device (mobile) ─────────────────────
+  device-mobile:
+    build:
+      context: .
+      dockerfile: Dockerfile.device
+    image: servicenexus/device-simulator:test
+    labels:
+      com.servicenexus.proprietary: "true"
+      com.servicenexus.component: "device-simulator"
+      com.servicenexus.device-role: "technician"
+    networks:
+      - servicenexus-internal
+    depends_on:
+      servicenexus-server:
+        condition: service_healthy
+    environment:
+      - SERVER_URL=http://servicenexus-server:3001
+      - DEVICE_ROLE=technician
+      - DEVICE_NAME=mobile-tech-1
+      - SIMULATE_COUNT=5
+
+  # ── Simulated office / dispatcher device (desktop) ─────────────────
+  device-desktop:
+    build:
+      context: .
+      dockerfile: Dockerfile.device
+    image: servicenexus/device-simulator:test
+    labels:
+      com.servicenexus.proprietary: "true"
+      com.servicenexus.component: "device-simulator"
+      com.servicenexus.device-role: "dispatcher"
+    networks:
+      - servicenexus-internal
+    depends_on:
+      servicenexus-server:
+        condition: service_healthy
+    environment:
+      - SERVER_URL=http://servicenexus-server:3001
+      - DEVICE_ROLE=dispatcher
+      - DEVICE_NAME=desktop-dispatch-1
+      - SIMULATE_COUNT=5
+
+  # ── Simulated tablet device (supervisor / inspector) ───────────────
+  device-tablet:
+    build:
+      context: .
+      dockerfile: Dockerfile.device
+    image: servicenexus/device-simulator:test
+    labels:
+      com.servicenexus.proprietary: "true"
+      com.servicenexus.component: "device-simulator"
+      com.servicenexus.device-role: "admin"
+    networks:
+      - servicenexus-internal
+    depends_on:
+      servicenexus-server:
+        condition: service_healthy
+    environment:
+      - SERVER_URL=http://servicenexus-server:3001
+      - DEVICE_ROLE=admin
+      - DEVICE_NAME=tablet-admin-1
+      - SIMULATE_COUNT=5
+
+volumes:
+  test-data:
+  test-uploads:
