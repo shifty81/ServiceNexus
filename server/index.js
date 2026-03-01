@@ -50,7 +50,21 @@ if (process.env.TRUST_PROXY === 'true') {
 }
 
 // Security and performance middleware
-app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "blob:"],
+      connectSrc: ["'self'", "ws:", "wss:"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  } : false,
+  crossOriginEmbedderPolicy: false
+}));
 app.use(compression());
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
