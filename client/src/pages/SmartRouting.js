@@ -23,8 +23,9 @@ function SmartRouting({ socket }) {
       setLoading(true);
       setError(null);
       const response = await axios.get('/api/routing');
-      setSuggestions(response.data.suggestions || []);
-      setUnassignedCount(response.data.unassignedCount || 0);
+      const data = response.data || [];
+      setSuggestions(data);
+      setUnassignedCount(data.length);
     } catch (err) {
       console.error('Error loading routing suggestions:', err);
       setError(err.response?.data?.error || 'Failed to load routing suggestions');
@@ -89,7 +90,7 @@ function SmartRouting({ socket }) {
     try {
       setAutoAssigning(true);
       const response = await axios.post('/api/routing/auto-assign-all');
-      const count = response.data.assignedCount || 0;
+      const count = response.data.totalAssigned || 0;
       showToast(`Successfully assigned ${count} service call${count !== 1 ? 's' : ''}`);
       loadSuggestions();
     } catch (err) {
@@ -216,17 +217,17 @@ function SmartRouting({ socket }) {
                       </div>
                       <div className="detail-row">
                         <span className="detail-label">🔧 Suggested Tech</span>
-                        <span className="detail-value">{s.technician?.username || s.technician_name || 'N/A'}</span>
+                        <span className="detail-value">{s.suggestedTechnician?.username || s.technician?.username || 'N/A'}</span>
                       </div>
                       <div className="detail-row">
                         <span className="detail-label">📊 Match Score</span>
                         <div className="score-bar-container">
                           <div
-                            className={`score-bar ${getScoreColorClass(s.overallScore || s.score || 0)}`}
-                            style={{ width: `${Math.min(s.overallScore || s.score || 0, 100)}%` }}
+                            className={`score-bar ${getScoreColorClass(s.score || 0)}`}
+                            style={{ width: `${Math.min(s.score || 0, 100)}%` }}
                           ></div>
                         </div>
-                        <span className="score-value">{Math.round(s.overallScore || s.score || 0)}%</span>
+                        <span className="score-value">{Math.round(s.score || 0)}%</span>
                       </div>
                     </div>
                     <button
