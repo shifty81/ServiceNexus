@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 const os = require('os');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
-// GET /api/admin/health - System health for remote monitoring
+// GET /api/admin/health - System health for remote monitoring (public for monitoring tools)
 router.get('/health', async (req, res) => {
   try {
     const dbCheck = await db.get('SELECT 1 AS ok');
@@ -33,7 +34,7 @@ router.get('/health', async (req, res) => {
 });
 
 // GET /api/admin/users - List all users with stats
-router.get('/users', async (req, res) => {
+router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const users = await db.query(`
       SELECT
@@ -52,7 +53,7 @@ router.get('/users', async (req, res) => {
 });
 
 // PUT /api/admin/users/:id - Update user role/type
-router.put('/users/:id', async (req, res) => {
+router.put('/users/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { role, user_type } = req.body;
     const { id } = req.params;
@@ -90,7 +91,7 @@ router.put('/users/:id', async (req, res) => {
 });
 
 // DELETE /api/admin/users/:id - Delete a user
-router.delete('/users/:id', async (req, res) => {
+router.delete('/users/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
@@ -111,7 +112,7 @@ router.delete('/users/:id', async (req, res) => {
 });
 
 // GET /api/admin/stats - Database table row counts
-router.get('/stats', async (req, res) => {
+router.get('/stats', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const ALLOWED_TABLES = new Set([
       'users', 'forms', 'form_submissions', 'dispatches', 'inventory',
@@ -142,7 +143,7 @@ router.get('/stats', async (req, res) => {
 });
 
 // GET /api/admin/config - Current server configuration (non-sensitive)
-router.get('/config', (req, res) => {
+router.get('/config', authenticateToken, requireAdmin, (req, res) => {
   res.json({
     nodeEnv: process.env.NODE_ENV || 'development',
     port: process.env.PORT || 3001,
@@ -182,7 +183,7 @@ router.get('/settings', async (req, res) => {
 });
 
 // PUT /api/admin/settings - Update branding / theme settings
-router.put('/settings', async (req, res) => {
+router.put('/settings', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const allowed = Object.keys(DEFAULT_SETTINGS);
     const updates = req.body;

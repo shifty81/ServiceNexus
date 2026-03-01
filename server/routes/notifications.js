@@ -3,11 +3,12 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 const { emitEvent, validateRequired } = require('../utils/routeHelpers');
+const { authenticateToken } = require('../middleware/auth');
 
 // Get notifications for a user
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const userId = req.query.user_id;
+    const userId = req.query.user_id || req.user.id;
     const unreadOnly = req.query.unread === 'true';
 
     let sql = `
@@ -38,7 +39,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create a notification
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       customer_id, user_id, type, channel,
@@ -72,7 +73,7 @@ router.post('/', async (req, res) => {
 });
 
 // Mark notification as read
-router.put('/:id/read', async (req, res) => {
+router.put('/:id/read', authenticateToken, async (req, res) => {
   try {
     await db.run('UPDATE notifications SET is_read = 1 WHERE id = ?', [req.params.id]);
     res.json({ message: 'Notification marked as read' });
@@ -82,10 +83,14 @@ router.put('/:id/read', async (req, res) => {
   }
 });
 
-// Mark all notifications as read for a user
-router.put('/read-all/:userId', async (req, res) => {
+// Mark all notifications as read for the authenticated user
+router.put('/read-all/:userId', authenticateToken, async (req, res) => {
   try {
-    await db.run('UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0', [req.params.userId]);
+    const targetUserId = req.params.userId;
+    if (targetUserId !== req.user.id) {
+      return res.status(403).json({ error: 'Can only mark your own notifications as read' });
+    }
+    await db.run('UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0', [targetUserId]);
     res.json({ message: 'All notifications marked as read' });
   } catch (error) {
     console.error('Error marking notifications as read:', error);
@@ -94,7 +99,7 @@ router.put('/read-all/:userId', async (req, res) => {
 });
 
 // Get unread count for a user
-router.get('/unread-count/:userId', async (req, res) => {
+router.get('/unread-count/:userId', authenticateToken, async (req, res) => {
   try {
     const result = await db.get(
       'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0',
@@ -108,7 +113,7 @@ router.get('/unread-count/:userId', async (req, res) => {
 });
 
 // Delete a notification
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM notifications WHERE id = ?', [req.params.id]);
     res.json({ message: 'Notification deleted successfully' });

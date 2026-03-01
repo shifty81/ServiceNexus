@@ -10,10 +10,10 @@ const calculateHoursAndPay = (clockIn, clockOut, breakDuration, hourlyRate) => {
   const break_duration_ms = (breakDuration || 0) * 60000; // convert minutes to milliseconds
   
   // Calculate total_hours as (clock_out - clock_in - break_duration) / 3600000
-  const total_hours = (clock_out_ms - clock_in_ms - break_duration_ms) / 3600000;
+  const total_hours = Math.max(0, (clock_out_ms - clock_in_ms - break_duration_ms) / 3600000);
   
   // Calculate total_pay as total_hours * hourly_rate
-  const total_pay = total_hours * (hourlyRate || 0);
+  const total_pay = total_hours * Math.max(0, hourlyRate || 0);
   
   return { total_hours, total_pay };
 };

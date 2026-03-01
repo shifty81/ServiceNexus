@@ -3,6 +3,10 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
+const JWT_SECRET = 'test-jwt-secret';
+// Set JWT_SECRET before requiring routes
+process.env.JWT_SECRET = JWT_SECRET;
+
 // Mock database module
 const mockDb = {
   query: jest.fn(),
@@ -26,8 +30,6 @@ jest.mock('bcrypt', () => ({
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const authRouter = require('./routes/auth');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 const createTestApp = () => {
   const app = express();
@@ -58,7 +60,7 @@ describe('Auth API', () => {
         username: 'testuser',
         email: 'test@example.com',
         role: 'user',
-        user_type: 'admin'
+        user_type: 'user'
       });
 
       const decoded = jwt.verify(res.body.token, JWT_SECRET);

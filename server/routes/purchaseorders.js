@@ -26,8 +26,13 @@ async function generatePONumber() {
 // Calculate totals from line items
 // TODO: Make tax_rate configurable per organization or purchase order
 function calculatePOTotals(line_items) {
-  const items = JSON.parse(line_items || '[]');
-  const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+  let items;
+  try {
+    items = JSON.parse(line_items || '[]');
+  } catch (e) {
+    return { error: 'Invalid line_items JSON' };
+  }
+  const subtotal = items.reduce((sum, item) => sum + ((item.quantity || 0) * (item.unit_price || 0)), 0);
   const tax_rate = 0; // Currently hardcoded to 0 - can be made configurable via settings
   const tax_amount = subtotal * tax_rate;
   const total = subtotal + tax_amount;
@@ -118,7 +123,11 @@ router.post('/', async (req, res) => {
     const po_number = await generatePONumber();
 
     // Calculate totals using helper function
-    const { subtotal, tax_rate, tax_amount, total } = calculatePOTotals(line_items);
+    const totals = calculatePOTotals(line_items);
+    if (totals.error) {
+      return res.status(400).json({ error: totals.error });
+    }
+    const { subtotal, tax_rate, tax_amount, total } = totals;
 
     await db.run(
       `INSERT INTO purchase_orders 
@@ -158,7 +167,11 @@ router.put('/:id', async (req, res) => {
     } = req.body;
 
     // Calculate totals using helper function
-    const { subtotal, tax_rate, tax_amount, total } = calculatePOTotals(line_items);
+    const totals = calculatePOTotals(line_items);
+    if (totals.error) {
+      return res.status(400).json({ error: totals.error });
+    }
+    const { subtotal, tax_rate, tax_amount, total } = totals;
 
     await db.run(
       `UPDATE purchase_orders 
