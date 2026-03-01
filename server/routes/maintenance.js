@@ -34,17 +34,32 @@ router.get('/schedules', async (req, res) => {
 router.post('/schedules', async (req, res) => {
   try {
     const { equipment_id, schedule_type, frequency_days, last_service_date, description, created_by } = req.body;
+
+    if (!equipment_id || !schedule_type || !frequency_days) {
+      return res.status(400).json({ error: 'equipment_id, schedule_type, and frequency_days are required' });
+    }
+
+    const validTypes = ['preventive', 'inspection', 'calibration', 'replacement'];
+    if (!validTypes.includes(schedule_type)) {
+      return res.status(400).json({ error: 'schedule_type must be one of: ' + validTypes.join(', ') });
+    }
+
+    const freq = parseInt(frequency_days, 10);
+    if (isNaN(freq) || freq < 1) {
+      return res.status(400).json({ error: 'frequency_days must be a positive integer' });
+    }
+
     const id = uuidv4();
 
     const baseDate = last_service_date || new Date().toISOString();
     const nextDate = new Date(baseDate);
-    nextDate.setDate(nextDate.getDate() + frequency_days);
+    nextDate.setDate(nextDate.getDate() + freq);
     const next_service_date = nextDate.toISOString();
 
     await db.run(
       `INSERT INTO maintenance_schedules (id, equipment_id, schedule_type, frequency_days, last_service_date, next_service_date, description, created_by)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, equipment_id, schedule_type, frequency_days, baseDate, next_service_date, description, created_by]
+      [id, equipment_id, schedule_type, freq, baseDate, next_service_date, description, created_by]
     );
 
     const schedule = await db.get('SELECT * FROM maintenance_schedules WHERE id = ?', [id]);
@@ -150,6 +165,11 @@ router.get('/alerts', async (req, res) => {
 router.put('/alerts/:id', async (req, res) => {
   try {
     const { status, resolved_by } = req.body;
+
+    const validStatuses = ['active', 'acknowledged', 'resolved', 'dismissed'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'status must be one of: ' + validStatuses.join(', ') });
+    }
 
     let resolvedAt = null;
     if (status === 'resolved' || status === 'dismissed') {

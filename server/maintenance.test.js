@@ -85,8 +85,8 @@ describe('Maintenance API', () => {
       const response = await request(app)
         .post('/api/maintenance/schedules')
         .send({});
-      expect(response.status).toBe(500);
-      expect(response.body.error).toBe('Failed to create maintenance schedule');
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBeDefined();
     });
   });
 
