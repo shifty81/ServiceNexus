@@ -34,6 +34,12 @@ function Navigation({ user, onLogout }) {
               <Link to="/servicecalls" className="nav-link" onClick={() => setMenuOpen(false)}>
                 My Service Requests
               </Link>
+              <Link to="/estimates" className="nav-link" onClick={() => setMenuOpen(false)}>
+                Estimates
+              </Link>
+              <Link to="/invoices" className="nav-link" onClick={() => setMenuOpen(false)}>
+                Invoices
+              </Link>
             </>
           )}
           
@@ -43,11 +49,17 @@ function Navigation({ user, onLogout }) {
               <Link to="/servicecalls" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Service Calls
               </Link>
+              <Link to="/dispatch" className="nav-link" onClick={() => setMenuOpen(false)}>
+                Dispatch
+              </Link>
               <Link to="/purchaseorders" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Purchase Orders
               </Link>
               <Link to="/inventory" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Inventory
+              </Link>
+              <Link to="/timetracking" className="nav-link" onClick={() => setMenuOpen(false)}>
+                Time Tracking
               </Link>
             </>
           )}
