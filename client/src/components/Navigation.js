@@ -12,7 +12,7 @@ function Navigation({ user, onLogout }) {
       <div className="nav-container">
         <Link to="/" className="nav-brand">
           <span className="nav-logo">📋</span>
-          FormForce {userType === 'client' ? 'Client' : userType === 'technician' ? 'Technician' : ''}
+          FieldForge {userType === 'client' ? 'Client' : userType === 'technician' ? 'Technician' : ''}
         </Link>
         
         <button 

@@ -6,9 +6,9 @@ const API_VERSION = '1.0.0';
 const openApiSpec = {
   openapi: '3.0.0',
   info: {
-    title: 'FormForce API',
+    title: 'FieldForge API',
     version: API_VERSION,
-    description: 'Comprehensive API for FormForce field service management platform. Manages forms, dispatching, inventory, customers, estimates, invoices, time tracking, service calls, equipment, and more.'
+    description: 'Comprehensive API for FieldForge field service management platform. Manages forms, dispatching, inventory, customers, estimates, invoices, time tracking, service calls, equipment, and more.'
   },
   servers: [
     { url: '/api', description: 'API base path' }

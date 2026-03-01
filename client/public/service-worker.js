@@ -1,5 +1,5 @@
-// Service Worker for FormForce PWA
-const CACHE_NAME = 'formforce-v1';
+// Service Worker for FieldForge PWA
+const CACHE_NAME = 'fieldforge-v1';
 const urlsToCache = [
   '/',
   '/static/css/main.css',

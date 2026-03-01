@@ -1,7 +1,7 @@
 {
-  "name": "formforce",
+  "name": "fieldforge",
   "version": "1.0.0",
-  "description": "AI Form Builder - Mobile forms for any device. A mobile and web-based forms solution with dispatching and inventory tracking",
+  "description": "FieldForge - AI-Powered Field Service Management Platform with forms, dispatching, CRM, invoicing, inventory tracking, and more",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",

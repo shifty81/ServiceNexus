@@ -73,9 +73,9 @@ HMAC signature verification for webhook deliveries:
 - **Algorithm:** HMAC-SHA256
 - **Secret:** Unique secret per webhook
 - **Headers:**
-  - `X-FormForce-Signature`: HMAC signature
-  - `X-FormForce-Delivery`: Unique delivery ID
-  - `X-FormForce-Event`: Event type
+  - `X-FieldForge-Signature`: HMAC signature
+  - `X-FieldForge-Delivery`: Unique delivery ID
+  - `X-FieldForge-Event`: Event type
 
 **Verification Example:**
 ```javascript
@@ -286,4 +286,4 @@ router.post('/', async (req, res) => { ... }); // Protected
 
 ---
 
-*FormForce - Empowering field service businesses with AI* 🚀
+*FieldForge - Empowering field service businesses with AI* 🚀

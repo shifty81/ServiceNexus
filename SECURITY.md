@@ -45,7 +45,7 @@ npm list jspdf
 
 Expected output:
 ```
-formforce-client@1.0.0
+fieldforge-client@1.0.0
 └── jspdf@4.0.0
 ```
 
@@ -192,7 +192,7 @@ If a security issue is discovered:
 
 For security concerns:
 - Report via GitHub Security Advisories
-- Email: security@formforce.example (update with actual email)
+- Email: security@fieldforge.example (update with actual email)
 - Response time: Within 24 hours for critical issues
 
 ---

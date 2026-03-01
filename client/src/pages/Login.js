@@ -35,7 +35,7 @@ function Login({ onLogin }) {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>📋 FormForce</h1>
+          <h1>📋 FieldForge</h1>
           <p>AI-Powered Mobile Forms for Any Device</p>
         </div>
 

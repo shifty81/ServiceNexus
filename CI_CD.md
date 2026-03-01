@@ -1,10 +1,10 @@
-# FormForce - CI/CD Documentation
+# FieldForge - CI/CD Documentation
 
-This document describes the Continuous Integration and Continuous Deployment (CI/CD) pipeline for FormForce.
+This document describes the Continuous Integration and Continuous Deployment (CI/CD) pipeline for FieldForge.
 
 ## Overview
 
-FormForce uses GitHub Actions for automated testing, building, and security audits. The CI/CD pipeline runs automatically on every push and pull request to ensure code quality and catch issues early.
+FieldForge uses GitHub Actions for automated testing, building, and security audits. The CI/CD pipeline runs automatically on every push and pull request to ensure code quality and catch issues early.
 
 ## Workflow Configuration
 
@@ -73,7 +73,7 @@ You can also manually trigger the workflow from GitHub:
 Add the CI/CD status badge to your documentation:
 
 ```markdown
-![CI/CD Pipeline](https://github.com/shifty81/FormForce/workflows/CI%2FCD%20Pipeline/badge.svg)
+![CI/CD Pipeline](https://github.com/shifty81/FieldForge/workflows/CI%2FCD%20Pipeline/badge.svg)
 ```
 
 This badge shows:
@@ -296,4 +296,4 @@ Planned CI/CD improvements:
 ---
 
 **Last Updated**: 2026-01-16  
-**Maintained by**: FormForce Development Team
+**Maintained by**: FieldForge Development Team

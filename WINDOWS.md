@@ -1,10 +1,10 @@
-# FormForce - Windows Quick Start Guide
+# FieldForge - Windows Quick Start Guide
 
-This guide is specifically for Windows users who want to quickly build and run FormForce using the automated PowerShell build script.
+This guide is specifically for Windows users who want to quickly build and run FieldForge using the automated PowerShell build script.
 
 ## 🚀 Super Quick Start (One Command)
 
-Open PowerShell in the FormForce directory and run:
+Open PowerShell in the FieldForge directory and run:
 
 ```powershell
 .\build.ps1
@@ -35,8 +35,8 @@ Before running the build script, you need:
 
 ```powershell
 # Clone the repository
-git clone https://github.com/shifty81/FormForce.git
-cd FormForce
+git clone https://github.com/shifty81/FieldForge.git
+cd FieldForge
 
 # Run the automated build script
 .\build.ps1
@@ -177,8 +177,8 @@ Make sure you're in the correct directory:
 # Check current directory
 Get-Location
 
-# Navigate to FormForce directory
-cd path\to\FormForce
+# Navigate to FieldForge directory
+cd path\to\FieldForge
 
 # Verify script exists
 Test-Path .\build.ps1
@@ -197,7 +197,7 @@ After the build completes and servers start:
 1. Open http://localhost:3000
 2. Click "Register" to create an account
 3. Fill in username, email, and password
-4. Start using FormForce!
+4. Start using FieldForge!
 
 ## 🎨 What Can You Do?
 
@@ -242,7 +242,7 @@ Once running, try these features:
 
 1. Make sure Node.js 14+ is installed: `node --version`
 2. Make sure npm is available: `npm --version`
-3. Check you're in the FormForce directory: `Get-Location`
+3. Check you're in the FieldForge directory: `Get-Location`
 4. Try a clean install: remove `node_modules` folders and rebuild
 5. Check [BUILD.md](BUILD.md) for detailed troubleshooting
 6. Open an issue on GitHub with error details

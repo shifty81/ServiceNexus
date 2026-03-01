@@ -274,5 +274,5 @@ Future enhancement: Integration with OCR/AI service for direct image analysis.
 ## Support
 
 For issues or questions:
-- GitHub Issues: https://github.com/shifty81/FormForce/issues
+- GitHub Issues: https://github.com/shifty81/FieldForge/issues
 - Documentation: See README.md and FEATURES.md
