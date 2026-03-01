@@ -75,5 +75,97 @@ describe('API Docs', () => {
       }
       expect(endpointCount).toBe(response.body.total);
     });
+
+    test('should include Routing group', async () => {
+      const response = await request(app).get('/api/docs/endpoints');
+      expect(response.status).toBe(200);
+      const groupNames = Object.keys(response.body.groups);
+      expect(groupNames).toContain('Routing');
+      expect(response.body.groups['Routing'].length).toBeGreaterThanOrEqual(4);
+    });
+
+    test('should include Maintenance group', async () => {
+      const response = await request(app).get('/api/docs/endpoints');
+      expect(response.status).toBe(200);
+      const groupNames = Object.keys(response.body.groups);
+      expect(groupNames).toContain('Maintenance');
+      expect(response.body.groups['Maintenance'].length).toBeGreaterThanOrEqual(6);
+    });
+
+    test('should include Agreements group', async () => {
+      const response = await request(app).get('/api/docs/endpoints');
+      expect(response.status).toBe(200);
+      const groupNames = Object.keys(response.body.groups);
+      expect(groupNames).toContain('Agreements');
+      expect(response.body.groups['Agreements'].length).toBeGreaterThanOrEqual(6);
+    });
+
+    test('should include Recurring Jobs group', async () => {
+      const response = await request(app).get('/api/docs/endpoints');
+      expect(response.status).toBe(200);
+      const groupNames = Object.keys(response.body.groups);
+      expect(groupNames).toContain('Recurring Jobs');
+      expect(response.body.groups['Recurring Jobs'].length).toBeGreaterThanOrEqual(7);
+    });
+
+    test('should include Notifications group', async () => {
+      const response = await request(app).get('/api/docs/endpoints');
+      expect(response.status).toBe(200);
+      const groupNames = Object.keys(response.body.groups);
+      expect(groupNames).toContain('Notifications');
+      expect(response.body.groups['Notifications'].length).toBeGreaterThanOrEqual(5);
+    });
+
+    test('should include Tags group', async () => {
+      const response = await request(app).get('/api/docs/endpoints');
+      expect(response.status).toBe(200);
+      const groupNames = Object.keys(response.body.groups);
+      expect(groupNames).toContain('Tags');
+      expect(response.body.groups['Tags'].length).toBeGreaterThanOrEqual(8);
+    });
+  });
+
+  describe('GET /api/docs - schemas', () => {
+    test('should include component schemas', async () => {
+      const response = await request(app).get('/api/docs');
+      expect(response.status).toBe(200);
+      const schemas = response.body.components.schemas;
+      expect(schemas).toBeDefined();
+      expect(schemas.Customer).toBeDefined();
+      expect(schemas.Invoice).toBeDefined();
+      expect(schemas.Estimate).toBeDefined();
+      expect(schemas.Dispatch).toBeDefined();
+      expect(schemas.ServiceCall).toBeDefined();
+      expect(schemas.Integration).toBeDefined();
+      expect(schemas.Tag).toBeDefined();
+      expect(schemas.Notification).toBeDefined();
+      expect(schemas.MaintenanceSchedule).toBeDefined();
+      expect(schemas.Agreement).toBeDefined();
+      expect(schemas.RecurringJob).toBeDefined();
+      expect(schemas.Error).toBeDefined();
+    });
+
+    test('schemas should have type object', async () => {
+      const response = await request(app).get('/api/docs');
+      const schemas = response.body.components.schemas;
+      for (const [name, schema] of Object.entries(schemas)) {
+        expect(schema.type).toBe('object');
+        expect(schema.properties).toBeDefined();
+      }
+    });
+  });
+
+  describe('GET /api/docs - tags', () => {
+    test('should include all route group tags', async () => {
+      const response = await request(app).get('/api/docs');
+      expect(response.status).toBe(200);
+      const tagNames = response.body.tags.map(t => t.name);
+      expect(tagNames).toContain('Routing');
+      expect(tagNames).toContain('Maintenance');
+      expect(tagNames).toContain('Agreements');
+      expect(tagNames).toContain('Recurring Jobs');
+      expect(tagNames).toContain('Notifications');
+      expect(tagNames).toContain('Tags');
+    });
   });
 });

@@ -33,7 +33,13 @@ const openApiSpec = {
     { name: 'Feedback', description: 'Customer feedback and ratings' },
     { name: 'Analytics', description: 'Dashboard and reporting analytics' },
     { name: 'Admin', description: 'Administration and system health' },
-    { name: 'Portal', description: 'Client portal access' }
+    { name: 'Portal', description: 'Client portal access' },
+    { name: 'Routing', description: 'Smart technician routing and auto-assignment' },
+    { name: 'Maintenance', description: 'Preventive maintenance schedules and alerts' },
+    { name: 'Agreements', description: 'Service agreement management' },
+    { name: 'Recurring Jobs', description: 'Recurring job scheduling and generation' },
+    { name: 'Notifications', description: 'User notifications' },
+    { name: 'Tags', description: 'Tag management and entity tagging' }
   ],
   paths: {
     // Auth
@@ -299,6 +305,113 @@ const openApiSpec = {
     },
     '/portal/invoices': {
       get: { tags: ['Portal'], summary: 'List invoices for a portal client', operationId: 'portalListInvoices' }
+    },
+
+    // Routing
+    '/routing': {
+      get: { tags: ['Routing'], summary: 'Get routing suggestions for unassigned service calls', operationId: 'getRoutingSuggestions' }
+    },
+    '/routing/auto-assign': {
+      post: { tags: ['Routing'], summary: 'Auto-assign a specific service call to the best technician', operationId: 'autoAssignServiceCall' }
+    },
+    '/routing/auto-assign-all': {
+      post: { tags: ['Routing'], summary: 'Auto-assign all unassigned pending service calls', operationId: 'autoAssignAllServiceCalls' }
+    },
+    '/routing/technician-scores': {
+      get: { tags: ['Routing'], summary: 'Get current scores for all technicians', operationId: 'getTechnicianScores' }
+    },
+
+    // Maintenance
+    '/maintenance/schedules': {
+      get: { tags: ['Maintenance'], summary: 'List all maintenance schedules', operationId: 'listMaintenanceSchedules' },
+      post: { tags: ['Maintenance'], summary: 'Create a maintenance schedule', operationId: 'createMaintenanceSchedule' }
+    },
+    '/maintenance/schedules/{id}': {
+      put: { tags: ['Maintenance'], summary: 'Update a maintenance schedule', operationId: 'updateMaintenanceSchedule' },
+      delete: { tags: ['Maintenance'], summary: 'Delete a maintenance schedule', operationId: 'deleteMaintenanceSchedule' }
+    },
+    '/maintenance/alerts': {
+      get: { tags: ['Maintenance'], summary: 'List maintenance alerts', operationId: 'listMaintenanceAlerts' }
+    },
+    '/maintenance/alerts/{id}': {
+      put: { tags: ['Maintenance'], summary: 'Update alert status (acknowledge, resolve, dismiss)', operationId: 'updateMaintenanceAlert' }
+    },
+    '/maintenance/generate-alerts': {
+      post: { tags: ['Maintenance'], summary: 'Generate alerts by scanning active maintenance schedules', operationId: 'generateMaintenanceAlerts' }
+    },
+    '/maintenance/dashboard': {
+      get: { tags: ['Maintenance'], summary: 'Get maintenance dashboard summary', operationId: 'getMaintenanceDashboard' }
+    },
+
+    // Agreements
+    '/agreements': {
+      get: { tags: ['Agreements'], summary: 'List all service agreements', operationId: 'listAgreements' },
+      post: { tags: ['Agreements'], summary: 'Create a service agreement', operationId: 'createAgreement' }
+    },
+    '/agreements/{id}': {
+      get: { tags: ['Agreements'], summary: 'Get a service agreement by ID', operationId: 'getAgreement' },
+      put: { tags: ['Agreements'], summary: 'Update a service agreement', operationId: 'updateAgreement' },
+      delete: { tags: ['Agreements'], summary: 'Delete a service agreement', operationId: 'deleteAgreement' }
+    },
+    '/agreements/customer/{customerId}': {
+      get: { tags: ['Agreements'], summary: 'Get agreements for a specific customer', operationId: 'getCustomerAgreements' }
+    },
+
+    // Recurring Jobs
+    '/recurringjobs': {
+      get: { tags: ['Recurring Jobs'], summary: 'List all recurring jobs', operationId: 'listRecurringJobs' },
+      post: { tags: ['Recurring Jobs'], summary: 'Create a recurring job', operationId: 'createRecurringJob' }
+    },
+    '/recurringjobs/{id}': {
+      get: { tags: ['Recurring Jobs'], summary: 'Get a recurring job by ID', operationId: 'getRecurringJob' },
+      put: { tags: ['Recurring Jobs'], summary: 'Update a recurring job', operationId: 'updateRecurringJob' },
+      delete: { tags: ['Recurring Jobs'], summary: 'Delete a recurring job', operationId: 'deleteRecurringJob' }
+    },
+    '/recurringjobs/{id}/generate': {
+      post: { tags: ['Recurring Jobs'], summary: 'Generate next dispatch from a recurring job', operationId: 'generateRecurringJobDispatch' }
+    },
+    '/recurringjobs/status/due': {
+      get: { tags: ['Recurring Jobs'], summary: 'Get due recurring jobs', operationId: 'getDueRecurringJobs' }
+    },
+
+    // Notifications
+    '/notifications': {
+      get: { tags: ['Notifications'], summary: 'Get notifications for the current user', operationId: 'listNotifications' },
+      post: { tags: ['Notifications'], summary: 'Create a notification', operationId: 'createNotification' }
+    },
+    '/notifications/{id}/read': {
+      put: { tags: ['Notifications'], summary: 'Mark a notification as read', operationId: 'markNotificationRead' }
+    },
+    '/notifications/read-all/{userId}': {
+      put: { tags: ['Notifications'], summary: 'Mark all notifications as read for a user', operationId: 'markAllNotificationsRead' }
+    },
+    '/notifications/unread-count/{userId}': {
+      get: { tags: ['Notifications'], summary: 'Get unread notification count for a user', operationId: 'getUnreadNotificationCount' }
+    },
+    '/notifications/{id}': {
+      delete: { tags: ['Notifications'], summary: 'Delete a notification', operationId: 'deleteNotification' }
+    },
+
+    // Tags
+    '/tags': {
+      get: { tags: ['Tags'], summary: 'List all tags', operationId: 'listTags' },
+      post: { tags: ['Tags'], summary: 'Create a tag', operationId: 'createTag' }
+    },
+    '/tags/{id}': {
+      put: { tags: ['Tags'], summary: 'Update a tag', operationId: 'updateTag' },
+      delete: { tags: ['Tags'], summary: 'Delete a tag', operationId: 'deleteTag' }
+    },
+    '/tags/assign': {
+      post: { tags: ['Tags'], summary: 'Assign a tag to an entity', operationId: 'assignTag' }
+    },
+    '/tags/assign/{tag_id}/{entity_type}/{entity_id}': {
+      delete: { tags: ['Tags'], summary: 'Remove a tag from an entity', operationId: 'removeTagAssignment' }
+    },
+    '/tags/entity/{entity_type}/{entity_id}': {
+      get: { tags: ['Tags'], summary: 'Get tags for a specific entity', operationId: 'getEntityTags' }
+    },
+    '/tags/{id}/entities': {
+      get: { tags: ['Tags'], summary: 'Get all entities associated with a tag', operationId: 'getTagEntities' }
     }
   },
   components: {
@@ -308,6 +421,163 @@ const openApiSpec = {
         scheme: 'bearer',
         bearerFormat: 'JWT',
         description: 'JWT token obtained from /api/auth/login'
+      }
+    },
+    schemas: {
+      Error: {
+        type: 'object',
+        properties: {
+          error: { type: 'string', description: 'Error message' }
+        }
+      },
+      Customer: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          company: { type: 'string' },
+          email: { type: 'string', format: 'email' },
+          phone: { type: 'string' },
+          address: { type: 'string' },
+          city: { type: 'string' },
+          state: { type: 'string' },
+          zip: { type: 'string' },
+          notes: { type: 'string' },
+          created_at: { type: 'string', format: 'date-time' },
+          updated_at: { type: 'string', format: 'date-time' }
+        }
+      },
+      Invoice: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          invoice_number: { type: 'string' },
+          customer_id: { type: 'string' },
+          status: { type: 'string', enum: ['draft', 'sent', 'pending', 'paid'] },
+          items: { type: 'string', description: 'JSON array of line items' },
+          subtotal: { type: 'number' },
+          tax_rate: { type: 'number' },
+          tax: { type: 'number' },
+          total: { type: 'number' },
+          amount_paid: { type: 'number' },
+          due_date: { type: 'string', format: 'date' },
+          created_at: { type: 'string', format: 'date-time' }
+        }
+      },
+      Estimate: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          estimate_number: { type: 'string' },
+          customer_id: { type: 'string' },
+          status: { type: 'string', enum: ['draft', 'sent', 'accepted', 'rejected'] },
+          items: { type: 'string', description: 'JSON array of line items' },
+          subtotal: { type: 'number' },
+          tax_rate: { type: 'number' },
+          tax: { type: 'number' },
+          total: { type: 'number' },
+          valid_until: { type: 'string', format: 'date' },
+          created_at: { type: 'string', format: 'date-time' }
+        }
+      },
+      Dispatch: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          title: { type: 'string' },
+          description: { type: 'string' },
+          address: { type: 'string' },
+          priority: { type: 'string', enum: ['low', 'medium', 'high', 'urgent'] },
+          status: { type: 'string', enum: ['pending', 'in_progress', 'completed', 'cancelled'] },
+          assigned_to: { type: 'string' },
+          scheduled_date: { type: 'string', format: 'date-time' },
+          created_at: { type: 'string', format: 'date-time' }
+        }
+      },
+      ServiceCall: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          customer_id: { type: 'string' },
+          title: { type: 'string' },
+          description: { type: 'string' },
+          status: { type: 'string', enum: ['pending', 'assigned', 'in_progress', 'completed', 'cancelled'] },
+          priority: { type: 'string', enum: ['low', 'medium', 'high', 'urgent'] },
+          assigned_to: { type: 'string' },
+          created_at: { type: 'string', format: 'date-time' }
+        }
+      },
+      Integration: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          type: { type: 'string', enum: ['quickbooks', 'salesforce', 'google', 'microsoft365', 'procore'] },
+          status: { type: 'string', enum: ['active', 'inactive'] },
+          health: { type: 'string', enum: ['healthy', 'error'] },
+          config: { type: 'object', description: 'Integration-specific configuration' },
+          last_sync: { type: 'string', format: 'date-time' },
+          created_at: { type: 'string', format: 'date-time' }
+        }
+      },
+      Tag: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          color: { type: 'string' },
+          created_at: { type: 'string', format: 'date-time' }
+        }
+      },
+      Notification: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          user_id: { type: 'string' },
+          title: { type: 'string' },
+          message: { type: 'string' },
+          type: { type: 'string' },
+          read: { type: 'boolean' },
+          created_at: { type: 'string', format: 'date-time' }
+        }
+      },
+      MaintenanceSchedule: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          equipment_id: { type: 'string' },
+          title: { type: 'string' },
+          frequency: { type: 'string' },
+          next_due: { type: 'string', format: 'date' },
+          status: { type: 'string', enum: ['active', 'paused'] },
+          created_at: { type: 'string', format: 'date-time' }
+        }
+      },
+      Agreement: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          customer_id: { type: 'string' },
+          title: { type: 'string' },
+          type: { type: 'string' },
+          status: { type: 'string' },
+          start_date: { type: 'string', format: 'date' },
+          end_date: { type: 'string', format: 'date' },
+          value: { type: 'number' },
+          created_at: { type: 'string', format: 'date-time' }
+        }
+      },
+      RecurringJob: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          title: { type: 'string' },
+          description: { type: 'string' },
+          frequency: { type: 'string' },
+          next_run: { type: 'string', format: 'date' },
+          status: { type: 'string', enum: ['active', 'paused'] },
+          created_at: { type: 'string', format: 'date-time' }
+        }
       }
     }
   },
