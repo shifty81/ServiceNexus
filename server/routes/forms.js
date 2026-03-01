@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const db = require('../database');
 const multer = require('multer');
 const path = require('path');
@@ -17,7 +18,7 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const uniqueSuffix = Date.now() + '-' + crypto.randomUUID();
     cb(null, uniqueSuffix + '-' + file.originalname);
   }
 });

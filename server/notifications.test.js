@@ -6,6 +6,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -22,6 +26,9 @@ jest.mock('uuid', () => ({
 }));
 
 const notificationsRouter = require('./routes/notifications');
+
+// Generate a valid auth token for testing
+const userToken = jwt.sign({ id: 'u1', username: 'testuser', role: 'user', user_type: 'user' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -52,7 +59,9 @@ describe('Notifications API', () => {
         { id: '1', type: 'reminder', message: 'Appointment tomorrow' }
       ]);
 
-      const response = await request(app).get('/api/notifications');
+      const response = await request(app)
+        .get('/api/notifications')
+        .set('Authorization', `Bearer ${userToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
     });
@@ -60,21 +69,32 @@ describe('Notifications API', () => {
     test('should filter by user_id', async () => {
       mockDb.query.mockResolvedValue([]);
 
-      const response = await request(app).get('/api/notifications?user_id=u1');
+      const response = await request(app)
+        .get('/api/notifications?user_id=u1')
+        .set('Authorization', `Bearer ${userToken}`);
       expect(response.status).toBe(200);
     });
 
     test('should filter unread only', async () => {
       mockDb.query.mockResolvedValue([]);
 
-      const response = await request(app).get('/api/notifications?unread=true');
+      const response = await request(app)
+        .get('/api/notifications?unread=true')
+        .set('Authorization', `Bearer ${userToken}`);
       expect(response.status).toBe(200);
+    });
+
+    test('should return 401 without auth token', async () => {
+      const response = await request(app).get('/api/notifications');
+      expect(response.status).toBe(401);
     });
 
     test('should return 500 on database error', async () => {
       mockDb.query.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/notifications');
+      const response = await request(app)
+        .get('/api/notifications')
+        .set('Authorization', `Bearer ${userToken}`);
       expect(response.status).toBe(500);
     });
   });
@@ -92,6 +112,7 @@ describe('Notifications API', () => {
 
       const response = await request(app)
         .post('/api/notifications')
+        .set('Authorization', `Bearer ${userToken}`)
         .send({ type: 'reminder', message: 'Service due tomorrow' });
 
       expect(response.status).toBe(201);
@@ -101,6 +122,7 @@ describe('Notifications API', () => {
     test('should return 400 when required fields missing', async () => {
       const response = await request(app)
         .post('/api/notifications')
+        .set('Authorization', `Bearer ${userToken}`)
         .send({ type: 'reminder' });
 
       expect(response.status).toBe(400);
@@ -111,6 +133,7 @@ describe('Notifications API', () => {
 
       const response = await request(app)
         .post('/api/notifications')
+        .set('Authorization', `Bearer ${userToken}`)
         .send({ type: 'reminder', message: 'Test' });
 
       expect(response.status).toBe(500);
@@ -121,7 +144,9 @@ describe('Notifications API', () => {
     test('should mark notification as read', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).put('/api/notifications/1/read');
+      const response = await request(app)
+        .put('/api/notifications/1/read')
+        .set('Authorization', `Bearer ${userToken}`);
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Notification marked as read');
     });
@@ -129,7 +154,9 @@ describe('Notifications API', () => {
     test('should return 500 on database error', async () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).put('/api/notifications/1/read');
+      const response = await request(app)
+        .put('/api/notifications/1/read')
+        .set('Authorization', `Bearer ${userToken}`);
       expect(response.status).toBe(500);
     });
   });
@@ -138,8 +165,17 @@ describe('Notifications API', () => {
     test('should mark all user notifications as read', async () => {
       mockDb.run.mockResolvedValue({ changes: 5 });
 
-      const response = await request(app).put('/api/notifications/read-all/u1');
+      const response = await request(app)
+        .put('/api/notifications/read-all/u1')
+        .set('Authorization', `Bearer ${userToken}`);
       expect(response.status).toBe(200);
+    });
+
+    test('should return 403 when marking another users notifications', async () => {
+      const response = await request(app)
+        .put('/api/notifications/read-all/other-user')
+        .set('Authorization', `Bearer ${userToken}`);
+      expect(response.status).toBe(403);
     });
   });
 
@@ -147,7 +183,9 @@ describe('Notifications API', () => {
     test('should return unread count', async () => {
       mockDb.get.mockResolvedValue({ count: 3 });
 
-      const response = await request(app).get('/api/notifications/unread-count/u1');
+      const response = await request(app)
+        .get('/api/notifications/unread-count/u1')
+        .set('Authorization', `Bearer ${userToken}`);
       expect(response.status).toBe(200);
       expect(response.body.count).toBe(3);
     });
@@ -155,7 +193,9 @@ describe('Notifications API', () => {
     test('should return 500 on database error', async () => {
       mockDb.get.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).get('/api/notifications/unread-count/u1');
+      const response = await request(app)
+        .get('/api/notifications/unread-count/u1')
+        .set('Authorization', `Bearer ${userToken}`);
       expect(response.status).toBe(500);
     });
   });
@@ -164,14 +204,18 @@ describe('Notifications API', () => {
     test('should delete a notification', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).delete('/api/notifications/1');
+      const response = await request(app)
+        .delete('/api/notifications/1')
+        .set('Authorization', `Bearer ${userToken}`);
       expect(response.status).toBe(200);
     });
 
     test('should return 500 on database error', async () => {
       mockDb.run.mockRejectedValue(new Error('DB error'));
 
-      const response = await request(app).delete('/api/notifications/1');
+      const response = await request(app)
+        .delete('/api/notifications/1')
+        .set('Authorization', `Bearer ${userToken}`);
       expect(response.status).toBe(500);
     });
   });

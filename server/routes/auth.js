@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Register
 router.post('/register', async (req, res) => {
@@ -16,16 +16,20 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Username and password required' });
     }
 
+    if (!JWT_SECRET) {
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const id = uuidv4();
 
     await db.run(
       'INSERT INTO users (id, username, password, email, role, user_type) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, username, hashedPassword, email, role || 'user', user_type || 'admin']
+      [id, username, hashedPassword, email, role || 'user', user_type || 'user']
     );
 
-    const token = jwt.sign({ id, username, role: role || 'user', user_type: user_type || 'admin' }, JWT_SECRET);
-    res.json({ token, user: { id, username, email, role: role || 'user', user_type: user_type || 'admin' } });
+    const token = jwt.sign({ id, username, role: role || 'user', user_type: user_type || 'user' }, JWT_SECRET);
+    res.json({ token, user: { id, username, email, role: role || 'user', user_type: user_type || 'user' } });
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({ error: 'Registration failed' });
@@ -36,6 +40,10 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
+
+    if (!JWT_SECRET) {
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
 
     const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
     

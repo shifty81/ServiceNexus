@@ -7,6 +7,10 @@ const request = require('supertest');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_SECRET = JWT_SECRET;
 
 // Mock database module
 const mockDb = {
@@ -18,6 +22,9 @@ const mockDb = {
 jest.mock('./database', () => mockDb);
 
 const adminRouter = require('./routes/admin');
+
+// Generate a valid admin token for testing
+const adminToken = jwt.sign({ id: 'admin-1', username: 'admin', role: 'admin', user_type: 'admin' }, JWT_SECRET);
 
 const createTestApp = () => {
   const app = express();
@@ -69,10 +76,17 @@ describe('Admin API', () => {
       ];
       mockDb.query.mockResolvedValue(mockUsers);
 
-      const response = await request(app).get('/api/admin/users');
+      const response = await request(app)
+        .get('/api/admin/users')
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body[0].username).toBe('admin');
+    });
+
+    test('should return 401 without auth token', async () => {
+      const response = await request(app).get('/api/admin/users');
+      expect(response.status).toBe(401);
     });
   });
 
@@ -85,6 +99,7 @@ describe('Admin API', () => {
 
       const response = await request(app)
         .put('/api/admin/users/u1')
+        .set('Authorization', `Bearer ${adminToken}`)
         .send({ role: 'admin' });
       expect(response.status).toBe(200);
       expect(response.body.role).toBe('admin');
@@ -93,6 +108,7 @@ describe('Admin API', () => {
     test('should return 400 without role or user_type', async () => {
       const response = await request(app)
         .put('/api/admin/users/u1')
+        .set('Authorization', `Bearer ${adminToken}`)
         .send({});
       expect(response.status).toBe(400);
     });
@@ -102,6 +118,7 @@ describe('Admin API', () => {
 
       const response = await request(app)
         .put('/api/admin/users/bad-id')
+        .set('Authorization', `Bearer ${adminToken}`)
         .send({ role: 'admin' });
       expect(response.status).toBe(404);
     });
@@ -112,7 +129,9 @@ describe('Admin API', () => {
       mockDb.get.mockResolvedValue({ id: 'u1', username: 'test' });
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      const response = await request(app).delete('/api/admin/users/u1');
+      const response = await request(app)
+        .delete('/api/admin/users/u1')
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('User deleted');
     });
@@ -120,8 +139,15 @@ describe('Admin API', () => {
     test('should return 404 for non-existent user', async () => {
       mockDb.get.mockResolvedValue(undefined);
 
-      const response = await request(app).delete('/api/admin/users/bad-id');
+      const response = await request(app)
+        .delete('/api/admin/users/bad-id')
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(response.status).toBe(404);
+    });
+
+    test('should return 401 without auth token', async () => {
+      const response = await request(app).delete('/api/admin/users/u1');
+      expect(response.status).toBe(401);
     });
   });
 
@@ -129,7 +155,9 @@ describe('Admin API', () => {
     test('should return table counts', async () => {
       mockDb.get.mockResolvedValue({ count: 5 });
 
-      const response = await request(app).get('/api/admin/stats');
+      const response = await request(app)
+        .get('/api/admin/stats')
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(response.status).toBe(200);
       expect(response.body.tableCounts).toBeDefined();
       expect(response.body.totalRecords).toBeDefined();
@@ -138,11 +166,18 @@ describe('Admin API', () => {
 
   describe('GET /api/admin/config', () => {
     test('should return server configuration', async () => {
-      const response = await request(app).get('/api/admin/config');
+      const response = await request(app)
+        .get('/api/admin/config')
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(response.status).toBe(200);
       expect(response.body.version).toBeDefined();
       expect(response.body.nodeEnv).toBeDefined();
       expect(response.body.port).toBeDefined();
+    });
+
+    test('should return 401 without auth token', async () => {
+      const response = await request(app).get('/api/admin/config');
+      expect(response.status).toBe(401);
     });
   });
 
@@ -189,6 +224,7 @@ describe('Admin API', () => {
 
       const response = await request(app)
         .put('/api/admin/settings')
+        .set('Authorization', `Bearer ${adminToken}`)
         .send({ brandName: 'NewBrand', primaryColor: '#00ff00' });
 
       expect(response.status).toBe(200);
@@ -202,6 +238,7 @@ describe('Admin API', () => {
 
       const response = await request(app)
         .put('/api/admin/settings')
+        .set('Authorization', `Bearer ${adminToken}`)
         .send({ unknownKey: 'value', brandName: 'Test' });
 
       expect(response.status).toBe(200);
@@ -215,6 +252,7 @@ describe('Admin API', () => {
 
       const response = await request(app)
         .put('/api/admin/settings')
+        .set('Authorization', `Bearer ${adminToken}`)
         .send({ brandName: 'Test' });
 
       expect(response.status).toBe(200);
@@ -227,9 +265,17 @@ describe('Admin API', () => {
 
       const response = await request(app)
         .put('/api/admin/settings')
+        .set('Authorization', `Bearer ${adminToken}`)
         .send({ brandName: 'Fail' });
 
       expect(response.status).toBe(500);
+    });
+
+    test('should return 401 without auth token', async () => {
+      const response = await request(app)
+        .put('/api/admin/settings')
+        .send({ brandName: 'Test' });
+      expect(response.status).toBe(401);
     });
   });
 });

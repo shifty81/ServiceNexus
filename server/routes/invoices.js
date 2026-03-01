@@ -69,8 +69,13 @@ router.post('/', async (req, res) => {
     }
 
     // Calculate totals
-    const items = JSON.parse(line_items || '[]');
-    const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+    let items;
+    try {
+      items = JSON.parse(line_items || '[]');
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid line_items JSON' });
+    }
+    const subtotal = items.reduce((sum, item) => sum + ((item.quantity || 0) * (item.unit_price || 0)), 0);
     const tax_amount = subtotal * (tax_rate || 0) / 100;
     const total = subtotal + tax_amount;
 
@@ -120,8 +125,13 @@ router.put('/:id', async (req, res) => {
     }
 
     // Calculate totals
-    const items = JSON.parse(line_items || '[]');
-    const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+    let items;
+    try {
+      items = JSON.parse(line_items || '[]');
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid line_items JSON' });
+    }
+    const subtotal = items.reduce((sum, item) => sum + ((item.quantity || 0) * (item.unit_price || 0)), 0);
     const tax_amount = subtotal * (tax_rate || 0) / 100;
     const total = subtotal + tax_amount;
 
