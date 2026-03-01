@@ -156,6 +156,17 @@ function TechPortal({ socket }) {
           </div>
         </div>
 
+        {stats.totalReviews > 0 && (
+          <div className="tech-rating-banner">
+            <span className="tech-rating-stars">
+              {'★'.repeat(Math.round(stats.averageRating || 0))}
+              {'☆'.repeat(5 - Math.round(stats.averageRating || 0))}
+            </span>
+            <span className="tech-rating-value">{stats.averageRating || 0}</span>
+            <span className="tech-rating-count">({stats.totalReviews} review{stats.totalReviews !== 1 ? 's' : ''})</span>
+          </div>
+        )}
+
         <div className="tech-clock-section">
           {stats.isClockedIn ? (
             <button className="tech-clock-btn tech-clock-out" onClick={handleClockOut}>
@@ -299,6 +310,24 @@ function TechPortal({ socket }) {
                     </span>
                     {dispatch.due_date && <span>Due: {new Date(dispatch.due_date).toLocaleDateString()}</span>}
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {data?.recentFeedback && data.recentFeedback.length > 0 && (
+          <div className="tech-section">
+            <h2 className="tech-section-title">⭐ Recent Reviews</h2>
+            <div className="tech-feedback-list">
+              {data.recentFeedback.map((fb, i) => (
+                <div key={i} className="tech-feedback-card">
+                  <div className="tech-feedback-stars">
+                    {'★'.repeat(fb.rating)}{'☆'.repeat(5 - fb.rating)}
+                  </div>
+                  <div className="tech-feedback-job">{fb.service_call_title}</div>
+                  {fb.comment && <div className="tech-feedback-comment">{fb.comment}</div>}
+                  <div className="tech-feedback-date">{new Date(fb.created_at).toLocaleDateString()}</div>
                 </div>
               ))}
             </div>

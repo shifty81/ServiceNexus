@@ -21,6 +21,7 @@ import PurchaseOrders from './pages/PurchaseOrders';
 import Integrations from './pages/Integrations';
 import CustomerPortal from './pages/CustomerPortal';
 import TechPortal from './pages/TechPortal';
+import Feedback from './pages/Feedback';
 import { io } from 'socket.io-client';
 
 function App() {
@@ -91,6 +92,7 @@ function App() {
             <Route path="/invoices" element={<Invoices socket={socket} />} />
             <Route path="/timetracking" element={<TimeTracking socket={socket} />} />
             <Route path="/integrations" element={<Integrations socket={socket} />} />
+            <Route path="/feedback" element={<Feedback socket={socket} />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

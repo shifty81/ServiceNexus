@@ -389,6 +389,22 @@ const initialize = () => {
           error_message TEXT,
           FOREIGN KEY (webhook_id) REFERENCES webhooks(id)
         )
+      `);
+
+      // Customer feedback / ratings for completed service calls
+      db.run(`
+        CREATE TABLE IF NOT EXISTS feedback (
+          id TEXT PRIMARY KEY,
+          service_call_id TEXT NOT NULL,
+          technician_id TEXT,
+          rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
+          comment TEXT,
+          submitted_by TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (service_call_id) REFERENCES service_calls(id),
+          FOREIGN KEY (technician_id) REFERENCES users(id),
+          FOREIGN KEY (submitted_by) REFERENCES users(id)
+        )
       `, (err) => {
         if (err) reject(err);
         else {

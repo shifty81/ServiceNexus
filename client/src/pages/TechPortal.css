@@ -507,3 +507,70 @@
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   }
 }
+
+/* Tech rating banner */
+.tech-rating-banner {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fbbf24;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tech-rating-stars {
+  color: #f59e0b;
+  font-size: 1.25rem;
+  letter-spacing: 2px;
+}
+
+.tech-rating-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #92400e;
+}
+
+.tech-rating-count {
+  color: #78716c;
+  font-size: 0.85rem;
+}
+
+/* Feedback list */
+.tech-feedback-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tech-feedback-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.tech-feedback-stars {
+  color: #f59e0b;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  margin-bottom: 0.25rem;
+}
+
+.tech-feedback-job {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.tech-feedback-comment {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.tech-feedback-date {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
