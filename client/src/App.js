@@ -19,6 +19,8 @@ import ServiceCalls from './pages/ServiceCalls';
 import ServiceCallDetail from './pages/ServiceCallDetail';
 import PurchaseOrders from './pages/PurchaseOrders';
 import Integrations from './pages/Integrations';
+import CustomerPortal from './pages/CustomerPortal';
+import TechPortal from './pages/TechPortal';
 import { io } from 'socket.io-client';
 
 function App() {
@@ -58,13 +60,21 @@ function App() {
     return <Login onLogin={handleLogin} />;
   }
 
+  const userType = user?.user_type || 'admin';
+
+  const PortalDashboard = () => {
+    if (userType === 'client') return <CustomerPortal socket={socket} />;
+    if (userType === 'technician') return <TechPortal socket={socket} />;
+    return <Dashboard socket={socket} />;
+  };
+
   return (
     <Router>
       <div className="App">
         <Navigation user={user} onLogout={handleLogout} />
         <main style={{ paddingTop: '80px', minHeight: '100vh' }}>
           <Routes>
-            <Route path="/" element={<Dashboard socket={socket} />} />
+            <Route path="/" element={<PortalDashboard />} />
             <Route path="/forms" element={<FormsList />} />
             <Route path="/forms/new" element={<FormBuilder />} />
             <Route path="/forms/:id" element={<FormView />} />
