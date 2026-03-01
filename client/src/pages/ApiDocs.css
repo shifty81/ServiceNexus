@@ -1,0 +1,282 @@
+.api-docs-page {
+  padding: 20px 0;
+}
+
+.api-docs-page .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.api-docs-page .page-header {
+  margin-bottom: 24px;
+}
+
+.api-docs-page .page-header h1 {
+  font-size: 1.8rem;
+  margin: 0 0 4px 0;
+}
+
+.api-docs-page .subtitle {
+  color: #6b7280;
+  margin: 0;
+}
+
+.api-docs-page .loading-state,
+.api-docs-page .error-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.api-docs-page .error-state h2 {
+  color: #ef4444;
+}
+
+/* Info Cards */
+.api-info-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.info-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.info-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.info-card p {
+  margin: 0 0 8px 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.info-card code {
+  display: inline-block;
+  background: #f3f4f6;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #1f2937;
+  word-break: break-all;
+}
+
+.base-url-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.copy-btn {
+  padding: 6px 14px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.copy-btn:hover {
+  background: #1d4ed8;
+}
+
+/* Search Bar */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-bar input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.endpoint-count {
+  font-size: 0.85rem;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+/* Endpoint Groups */
+.endpoint-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.endpoint-group {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.group-header:hover {
+  background: #f9fafb;
+}
+
+.group-arrow {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  width: 16px;
+  text-align: center;
+}
+
+.group-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  flex: 1;
+}
+
+.group-count {
+  background: #e5e7eb;
+  color: #4b5563;
+  font-size: 0.75rem;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* Endpoint Rows */
+.group-endpoints {
+  border-top: 1px solid #f3f4f6;
+}
+
+.endpoint-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+}
+
+.endpoint-row:last-child {
+  border-bottom: none;
+}
+
+.endpoint-row:hover {
+  background: #f9fafb;
+}
+
+/* Method Badges */
+.method-badge {
+  display: inline-block;
+  width: 60px;
+  text-align: center;
+  padding: 3px 0;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.method-get {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.method-post {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.method-put {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.method-patch {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.method-delete {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.endpoint-path {
+  font-size: 0.875rem;
+  background: transparent;
+  padding: 0;
+  color: #1f2937;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.endpoint-desc {
+  font-size: 0.85rem;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .api-info-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .endpoint-count {
+    text-align: right;
+  }
+
+  .endpoint-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .endpoint-desc {
+    width: 100%;
+    white-space: normal;
+  }
+}
