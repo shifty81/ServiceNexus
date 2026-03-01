@@ -154,4 +154,63 @@ router.get('/config', (req, res) => {
   });
 });
 
+// Default branding / theme settings
+const DEFAULT_SETTINGS = {
+  brandName: 'ServiceNexus',
+  brandTagline: 'AI-Powered Mobile Forms for Any Device',
+  brandLogo: '',
+  primaryColor: '#2563eb',
+  secondaryColor: '#1e40af',
+  accentColor: '#3b82f6',
+  navbarBg: '#1e293b',
+  navbarText: '#ffffff'
+};
+
+// GET /api/admin/settings - Retrieve all branding / theme settings
+router.get('/settings', async (req, res) => {
+  try {
+    const rows = await db.query('SELECT key, value FROM settings');
+    const settings = { ...DEFAULT_SETTINGS };
+    for (const row of rows) {
+      settings[row.key] = row.value;
+    }
+    res.json(settings);
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// PUT /api/admin/settings - Update branding / theme settings
+router.put('/settings', async (req, res) => {
+  try {
+    const allowed = Object.keys(DEFAULT_SETTINGS);
+    const updates = req.body;
+
+    for (const [key, value] of Object.entries(updates)) {
+      if (!allowed.includes(key)) continue;
+      await db.run(
+        `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+        [key, String(value)]
+      );
+    }
+
+    // Return the full merged settings
+    const rows = await db.query('SELECT key, value FROM settings');
+    const settings = { ...DEFAULT_SETTINGS };
+    for (const row of rows) {
+      settings[row.key] = row.value;
+    }
+
+    const io = req.app.get('io');
+    if (io) io.emit('settings-updated', settings);
+
+    res.json(settings);
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
 module.exports = router;

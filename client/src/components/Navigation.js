@@ -1,11 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import './Navigation.css';
 
 function Navigation({ user, onLogout }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const { t, i18n } = useTranslation();
   
   const userType = user?.user_type || 'admin';
+
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+  };
 
   return (
     <nav className="navigation">
@@ -25,20 +31,20 @@ function Navigation({ user, onLogout }) {
 
         <div className={`nav-menu ${menuOpen ? 'active' : ''}`}>
           <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}>
-            Dashboard
+            {t('nav.dashboard')}
           </Link>
           
           {/* Client view - simplified menu */}
           {userType === 'client' && (
             <>
               <Link to="/servicecalls" className="nav-link" onClick={() => setMenuOpen(false)}>
-                My Service Requests
+                {t('nav.myServiceRequests')}
               </Link>
               <Link to="/estimates" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Estimates
+                {t('nav.estimates')}
               </Link>
               <Link to="/invoices" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Invoices
+                {t('nav.invoices')}
               </Link>
             </>
           )}
@@ -47,19 +53,19 @@ function Navigation({ user, onLogout }) {
           {userType === 'technician' && (
             <>
               <Link to="/servicecalls" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Service Calls
+                {t('nav.serviceCalls')}
               </Link>
               <Link to="/dispatch" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Dispatch
+                {t('nav.dispatch')}
               </Link>
               <Link to="/purchaseorders" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Purchase Orders
+                {t('nav.purchaseOrders')}
               </Link>
               <Link to="/inventory" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Inventory
+                {t('nav.inventory')}
               </Link>
               <Link to="/timetracking" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Time Tracking
+                {t('nav.timeTracking')}
               </Link>
             </>
           )}
@@ -68,66 +74,82 @@ function Navigation({ user, onLogout }) {
           {userType === 'admin' && (
             <>
               <Link to="/forms" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Forms
+                {t('nav.forms')}
               </Link>
               <Link to="/ai-upload" className="nav-link" onClick={() => setMenuOpen(false)}>
-                AI Upload
+                {t('nav.aiUpload')}
               </Link>
               <Link to="/servicecalls" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Service Calls
+                {t('nav.serviceCalls')}
               </Link>
               <Link to="/dispatch" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Dispatch
+                {t('nav.dispatch')}
               </Link>
               <Link to="/purchaseorders" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Purchase Orders
+                {t('nav.purchaseOrders')}
               </Link>
               <Link to="/inventory" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Inventory
+                {t('nav.inventory')}
               </Link>
               <Link to="/customers" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Customers
+                {t('nav.customers')}
               </Link>
               <Link to="/estimates" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Estimates
+                {t('nav.estimates')}
               </Link>
               <Link to="/invoices" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Invoices
+                {t('nav.invoices')}
               </Link>
               <Link to="/timetracking" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Time Tracking
+                {t('nav.timeTracking')}
               </Link>
               <Link to="/integrations" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Integrations
+                {t('nav.integrations')}
               </Link>
               <Link to="/feedback" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Feedback
+                {t('nav.feedback')}
               </Link>
               <Link to="/analytics" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Analytics
+                {t('nav.analytics')}
               </Link>
               <Link to="/smart-routing" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Smart Routing
+                {t('nav.smartRouting')}
               </Link>
               <Link to="/maintenance" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Maintenance
+                {t('nav.maintenance')}
               </Link>
               <Link to="/reports" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Reports
+                {t('nav.reports')}
               </Link>
               <Link to="/api-docs" className="nav-link" onClick={() => setMenuOpen(false)}>
-                API Docs
+                {t('nav.apiDocs')}
               </Link>
               <Link to="/system" className="nav-link" onClick={() => setMenuOpen(false)}>
-                System
+                {t('nav.system')}
               </Link>
             </>
           )}
           
           <div className="nav-user">
+            <div className="language-switcher">
+              <button
+                className={`lang-btn ${i18n.language === 'en' ? 'active' : ''}`}
+                onClick={() => changeLanguage('en')}
+                title="English"
+              >
+                EN
+              </button>
+              <button
+                className={`lang-btn ${i18n.language === 'es' ? 'active' : ''}`}
+                onClick={() => changeLanguage('es')}
+                title="Español"
+              >
+                ES
+              </button>
+            </div>
             <span className="user-name">{user?.username || 'User'} ({userType})</span>
             <button className="btn btn-sm btn-outline" onClick={onLogout}>
-              Logout
+              {t('nav.logout')}
             </button>
           </div>
         </div>

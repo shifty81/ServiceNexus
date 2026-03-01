@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import './Login.css';
 
 function Login({ onLogin }) {
@@ -10,6 +11,7 @@ function Login({ onLogin }) {
   const [userType, setUserType] = useState('admin');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { t, i18n } = useTranslation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,15 +37,19 @@ function Login({ onLogin }) {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>📋 ServiceNexus</h1>
-          <p>AI-Powered Mobile Forms for Any Device</p>
+          <h1>📋 {t('login.title')}</h1>
+          <p>{t('login.subtitle')}</p>
+          <div className="login-lang-switcher">
+            <button className={`lang-btn-login ${i18n.language === 'en' ? 'active' : ''}`} onClick={() => i18n.changeLanguage('en')}>EN</button>
+            <button className={`lang-btn-login ${i18n.language === 'es' ? 'active' : ''}`} onClick={() => i18n.changeLanguage('es')}>ES</button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
           {error && <div className="alert alert-error">{error}</div>}
           
           <div className="form-group">
-            <label className="form-label">Username</label>
+            <label className="form-label">{t('login.username')}</label>
             <input
               type="text"
               className="form-control"
@@ -57,7 +63,7 @@ function Login({ onLogin }) {
           {isRegister && (
             <>
               <div className="form-group">
-                <label className="form-label">Email</label>
+                <label className="form-label">{t('login.email')}</label>
                 <input
                   type="email"
                   className="form-control"
@@ -68,23 +74,23 @@ function Login({ onLogin }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">User Type</label>
+                <label className="form-label">{t('login.userType')}</label>
                 <select
                   className="form-control"
                   value={userType}
                   onChange={(e) => setUserType(e.target.value)}
                   required
                 >
-                  <option value="admin">Admin - Full access and management</option>
-                  <option value="technician">Technician - Field service and equipment tracking</option>
-                  <option value="client">Client - Submit service requests and view updates</option>
+                  <option value="admin">{t('login.admin')}</option>
+                  <option value="technician">{t('login.technician')}</option>
+                  <option value="client">{t('login.client')}</option>
                 </select>
               </div>
             </>
           )}
 
           <div className="form-group">
-            <label className="form-label">Password</label>
+            <label className="form-label">{t('login.password')}</label>
             <input
               type="password"
               className="form-control"
@@ -95,7 +101,9 @@ function Login({ onLogin }) {
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Processing...' : (isRegister ? 'Register' : 'Login')}
+            {loading
+              ? (isRegister ? t('login.creating') : t('login.signingIn'))
+              : (isRegister ? t('login.register') : t('login.signIn'))}
           </button>
 
           <div className="login-toggle">
@@ -108,8 +116,8 @@ function Login({ onLogin }) {
               }}
             >
               {isRegister 
-                ? 'Already have an account? Login' 
-                : "Don't have an account? Register"}
+                ? t('login.switchToLogin')
+                : t('login.switchToRegister')}
             </button>
           </div>
         </form>

@@ -145,4 +145,91 @@ describe('Admin API', () => {
       expect(response.body.port).toBeDefined();
     });
   });
+
+  describe('GET /api/admin/settings', () => {
+    test('should return default settings when no overrides exist', async () => {
+      mockDb.query.mockResolvedValue([]);
+
+      const response = await request(app).get('/api/admin/settings');
+      expect(response.status).toBe(200);
+      expect(response.body.brandName).toBe('ServiceNexus');
+      expect(response.body.primaryColor).toBe('#2563eb');
+      expect(response.body.navbarBg).toBe('#1e293b');
+    });
+
+    test('should merge stored overrides with defaults', async () => {
+      mockDb.query.mockResolvedValue([
+        { key: 'brandName', value: 'Acme Corp' },
+        { key: 'primaryColor', value: '#ff0000' }
+      ]);
+
+      const response = await request(app).get('/api/admin/settings');
+      expect(response.status).toBe(200);
+      expect(response.body.brandName).toBe('Acme Corp');
+      expect(response.body.primaryColor).toBe('#ff0000');
+      // Default values still present
+      expect(response.body.navbarBg).toBe('#1e293b');
+    });
+
+    test('should return 500 on database error', async () => {
+      mockDb.query.mockRejectedValue(new Error('DB error'));
+
+      const response = await request(app).get('/api/admin/settings');
+      expect(response.status).toBe(500);
+    });
+  });
+
+  describe('PUT /api/admin/settings', () => {
+    test('should save and return updated settings', async () => {
+      mockDb.run.mockResolvedValue({ changes: 1 });
+      mockDb.query.mockResolvedValue([
+        { key: 'brandName', value: 'NewBrand' },
+        { key: 'primaryColor', value: '#00ff00' }
+      ]);
+
+      const response = await request(app)
+        .put('/api/admin/settings')
+        .send({ brandName: 'NewBrand', primaryColor: '#00ff00' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.brandName).toBe('NewBrand');
+      expect(response.body.primaryColor).toBe('#00ff00');
+    });
+
+    test('should ignore unknown keys', async () => {
+      mockDb.run.mockResolvedValue({ changes: 1 });
+      mockDb.query.mockResolvedValue([]);
+
+      const response = await request(app)
+        .put('/api/admin/settings')
+        .send({ unknownKey: 'value', brandName: 'Test' });
+
+      expect(response.status).toBe(200);
+      // run should have been called for brandName only
+      expect(mockDb.run).toHaveBeenCalledTimes(1);
+    });
+
+    test('should emit settings-updated via socket', async () => {
+      mockDb.run.mockResolvedValue({ changes: 1 });
+      mockDb.query.mockResolvedValue([{ key: 'brandName', value: 'Test' }]);
+
+      const response = await request(app)
+        .put('/api/admin/settings')
+        .send({ brandName: 'Test' });
+
+      expect(response.status).toBe(200);
+      const io = app.get('io');
+      expect(io.emit).toHaveBeenCalledWith('settings-updated', expect.objectContaining({ brandName: 'Test' }));
+    });
+
+    test('should return 500 on database error', async () => {
+      mockDb.run.mockRejectedValue(new Error('DB error'));
+
+      const response = await request(app)
+        .put('/api/admin/settings')
+        .send({ brandName: 'Fail' });
+
+      expect(response.status).toBe(500);
+    });
+  });
 });

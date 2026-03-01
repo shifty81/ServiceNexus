@@ -227,3 +227,71 @@
   .health-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Branding tab */
+.branding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.branding-form .form-group {
+  margin-bottom: 0;
+}
+
+.branding-form .form-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.branding-form .form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-row input[type="color"] {
+  width: 40px;
+  height: 36px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.color-row .form-control {
+  flex: 1;
+}
+
+.branding-preview {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.branding-preview h3 {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  color: #374151;
+}

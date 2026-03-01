@@ -32,6 +32,36 @@
   font-size: 0.95rem;
 }
 
+.login-lang-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 0.75rem;
+}
+
+.lang-btn-login {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lang-btn-login:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.lang-btn-login.active {
+  background: var(--primary-color, #2563eb);
+  color: white;
+  border-color: var(--primary-color, #2563eb);
+}
+
 .login-form {
   margin-bottom: 2rem;
 }

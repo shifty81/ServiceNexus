@@ -431,6 +431,15 @@ const initialize = () => {
         )
       `);
 
+      // Application settings for white-label / theming
+      db.run(`
+        CREATE TABLE IF NOT EXISTS settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
       // Customer feedback / ratings for completed service calls
       db.run(`
         CREATE TABLE IF NOT EXISTS feedback (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import axios from 'axios';
 import Navigation from './components/Navigation';
 import Dashboard from './pages/Dashboard';
 import FormBuilder from './pages/FormBuilder';
@@ -29,6 +30,19 @@ import SmartRouting from './pages/SmartRouting';
 import Maintenance from './pages/Maintenance';
 import { io } from 'socket.io-client';
 
+function applyTheme(settings) {
+  if (!settings) return;
+  const root = document.documentElement;
+  if (settings.primaryColor) root.style.setProperty('--primary-color', settings.primaryColor);
+  if (settings.secondaryColor) root.style.setProperty('--secondary-color', settings.secondaryColor);
+  if (settings.accentColor) root.style.setProperty('--accent-color', settings.accentColor);
+  if (settings.navbarBg) {
+    root.style.setProperty('--navbar-bg', settings.navbarBg);
+    root.style.setProperty('--navbar-bg-end', settings.navbarBg);
+  }
+  if (settings.navbarText) root.style.setProperty('--navbar-text', settings.navbarText);
+}
+
 function App() {
   const [user, setUser] = useState(null);
   const [socket, setSocket] = useState(null);
@@ -44,6 +58,14 @@ function App() {
     // Initialize socket connection
     const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:3001');
     setSocket(newSocket);
+
+    // Load theme settings
+    axios.get('/api/admin/settings')
+      .then(res => applyTheme(res.data))
+      .catch(() => {});
+
+    // Listen for settings updates
+    newSocket.on('settings-updated', applyTheme);
 
     return () => {
       if (newSocket) newSocket.close();
