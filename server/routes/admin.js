@@ -113,17 +113,17 @@ router.delete('/users/:id', async (req, res) => {
 // GET /api/admin/stats - Database table row counts
 router.get('/stats', async (req, res) => {
   try {
-    const tables = [
+    const ALLOWED_TABLES = new Set([
       'users', 'forms', 'form_submissions', 'dispatches', 'inventory',
       'customers', 'estimates', 'invoices', 'time_entries', 'service_calls',
       'feedback', 'integrations', 'api_keys', 'webhooks', 'purchase_orders',
       'equipment', 'qr_codes'
-    ];
+    ]);
 
     const counts = {};
-    for (const table of tables) {
+    for (const table of ALLOWED_TABLES) {
       try {
-        const row = await db.get(`SELECT COUNT(*) AS count FROM ${table}`);
+        const row = await db.get('SELECT COUNT(*) AS count FROM "' + table.replace(/"/g, '') + '"');
         counts[table] = row.count;
       } catch {
         counts[table] = 0;

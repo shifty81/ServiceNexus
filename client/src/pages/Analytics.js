@@ -219,7 +219,7 @@ function Analytics() {
     <div className="analytics-page">
       <div className="container">
         <div className="page-header">
-          <h1>📊 Analytics &amp; Business Intelligence</h1>
+          <h1>📊 Analytics & Business Intelligence</h1>
           <p className="subtitle">Real-time insights into your business performance</p>
         </div>
 

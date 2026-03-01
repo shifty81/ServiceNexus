@@ -218,9 +218,9 @@ async function getOperationalMetrics() {
   const inventory = await db.get(`
     SELECT
       COUNT(*) AS totalInventoryItems,
-      SUM(CASE WHEN quantity <= ${LOW_STOCK_THRESHOLD} THEN 1 ELSE 0 END) AS lowStockItems
+      SUM(CASE WHEN quantity <= ? THEN 1 ELSE 0 END) AS lowStockItems
     FROM inventory
-  `);
+  `, [LOW_STOCK_THRESHOLD]);
 
   const estimates = await db.get(`
     SELECT

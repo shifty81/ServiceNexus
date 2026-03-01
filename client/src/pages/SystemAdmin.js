@@ -17,17 +17,17 @@ function SystemAdmin({ socket }) {
   }, [activeTab]);
 
   useEffect(() => {
-    if (socket) {
-      socket.on('user-updated', () => { if (activeTab === 'users') loadUsers(); });
-      socket.on('user-deleted', () => { if (activeTab === 'users') loadUsers(); });
-    }
+    if (!socket) return;
+    function onUserUpdated() { if (activeTab === 'users') loadUsers(); }
+    function onUserDeleted() { if (activeTab === 'users') loadUsers(); }
+    socket.on('user-updated', onUserUpdated);
+    socket.on('user-deleted', onUserDeleted);
     return () => {
-      if (socket) {
-        socket.off('user-updated');
-        socket.off('user-deleted');
-      }
+      socket.off('user-updated', onUserUpdated);
+      socket.off('user-deleted', onUserDeleted);
     };
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, activeTab]);
 
   function showNotification(message, type) {
     setNotification({ message, type });

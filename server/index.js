@@ -35,7 +35,7 @@ const server = http.createServer(app);
 
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 const corsOptions = {
-  origin: CORS_ORIGIN === '*' ? '*' : CORS_ORIGIN.split(',').map(s => s.trim()),
+  origin: CORS_ORIGIN === '*' ? '*' : CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: CORS_ORIGIN !== '*'
 };
