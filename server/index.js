@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
+const helmet = require('helmet');
+const compression = require('compression');
 require('dotenv').config();
 
 const db = require('./database');
@@ -25,20 +27,32 @@ const apiKeysRouter = require('./routes/apikeys');
 const webhooksRouter = require('./routes/webhooks');
 const portalRouter = require('./routes/portal');
 const feedbackRouter = require('./routes/feedback');
+const analyticsRouter = require('./routes/analytics');
+const adminRouter = require('./routes/admin');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
-});
+
+const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+const corsOptions = {
+  origin: CORS_ORIGIN === '*' ? '*' : CORS_ORIGIN.split(',').map(s => s.trim()),
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: CORS_ORIGIN !== '*'
+};
+
+const io = socketIo(server, { cors: corsOptions });
 
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
+// Trust proxy when running behind a reverse proxy (nginx, cloud LB, etc.)
+if (process.env.TRUST_PROXY === 'true') {
+  app.set('trust proxy', 1);
+}
+
+// Security and performance middleware
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(compression());
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -67,6 +81,8 @@ app.use('/api/apikeys', apiKeysRouter);
 app.use('/api/webhooks', webhooksRouter);
 app.use('/api/portal', portalRouter);
 app.use('/api/feedback', feedbackRouter);
+app.use('/api/analytics', analyticsRouter);
+app.use('/api/admin', adminRouter);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {

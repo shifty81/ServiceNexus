@@ -1,0 +1,11 @@
+node_modules/
+client/node_modules/
+.git
+.env
+*.db
+*.sqlite
+coverage/
+.vscode/
+.idea/
+*.log
+uploads/
