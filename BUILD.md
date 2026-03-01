@@ -179,10 +179,43 @@ chmod +x build.sh
 
 ## VM Test Environment
 
-The VM test environment uses Docker Compose to spin up the ServiceNexus server alongside
-multiple simulated device containers (mobile, desktop, tablet). Each device runs a
-Node.js simulator that registers a user, authenticates, and exercises platform APIs
-according to its role (technician, dispatcher, admin).
+The VM test environment is a **fully proprietary, self-contained** Docker Compose setup.
+Every container — server and device simulators alike — is built from project-owned
+Dockerfiles at build time. No public images are pulled at runtime. All services
+communicate over an isolated internal Docker network with no outbound internet access,
+ensuring a secure and reproducible testing sandbox.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              servicenexus-internal (isolated)            │
+│                                                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │ device-mobile │  │device-desktop│  │ device-tablet │  │
+│  │  (technician) │  │ (dispatcher) │  │    (admin)    │  │
+│  │  Dockerfile.  │  │  Dockerfile. │  │  Dockerfile.  │  │
+│  │    device     │  │    device    │  │    device     │  │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │
+│         │                 │                  │          │
+│         └────────┬────────┘──────────────────┘          │
+│                  ▼                                      │
+│     ┌────────────────────────┐                          │
+│     │   servicenexus-server  │───── servicenexus-gateway │
+│     │      (Dockerfile)      │        (host port 3001)  │
+│     └────────────────────────┘                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Key Proprietary Features
+
+- **Custom Dockerfiles** — `Dockerfile` (server) and `Dockerfile.device` (simulators)
+  are both built from the project source; no external `image:` references
+- **Isolated network** — `servicenexus-internal` is marked `internal: true`, preventing
+  any outbound traffic from test containers
+- **Non-root execution** — the device simulator image runs as an unprivileged user
+- **Proprietary labels** — all images and networks carry `com.servicenexus.*` OCI labels
+  for identification and policy enforcement
 
 ### Prerequisites
 
@@ -197,12 +230,14 @@ chmod +x scripts/vm-test-env.sh
 ```
 
 This will:
-1. Build the ServiceNexus Docker image
-2. Start the server container with a health check
-3. Launch three device simulators (mobile, desktop, tablet)
-4. Run API interactions against the platform
-5. Report pass/fail results per device
-6. Tear down the environment automatically
+1. Build the proprietary server image (`servicenexus/server:test`) from `Dockerfile`
+2. Build the proprietary device image (`servicenexus/device-simulator:test`) from `Dockerfile.device`
+3. Create an isolated internal Docker network
+4. Start the server container with a health check
+5. Launch three device simulators (mobile, desktop, tablet)
+6. Run API interactions against the platform
+7. Report pass/fail results per device
+8. Tear down the environment automatically
 
 ### Options
 
@@ -221,12 +256,12 @@ This will:
 
 The test environment is defined in `docker-compose.test.yml`:
 
-| Service              | Role        | Description                                |
-|----------------------|-------------|--------------------------------------------|
-| servicenexus-server  | Platform    | The ServiceNexus application under test    |
-| device-mobile        | Technician  | Simulates a field technician on mobile     |
-| device-desktop       | Dispatcher  | Simulates an office dispatcher on desktop  |
-| device-tablet        | Admin       | Simulates an admin/supervisor on a tablet  |
+| Service              | Image                                  | Role        | Description                                |
+|----------------------|----------------------------------------|-------------|--------------------------------------------|
+| servicenexus-server  | `servicenexus/server:test`             | Platform    | The ServiceNexus application under test    |
+| device-mobile        | `servicenexus/device-simulator:test`   | Technician  | Simulates a field technician on mobile     |
+| device-desktop       | `servicenexus/device-simulator:test`   | Dispatcher  | Simulates an office dispatcher on desktop  |
+| device-tablet        | `servicenexus/device-simulator:test`   | Admin       | Simulates an admin/supervisor on a tablet  |
 
 ### CI Integration
 
@@ -240,10 +275,15 @@ To simulate additional devices, add a new service to `docker-compose.test.yml`:
 
 ```yaml
 device-extra:
-  image: node:18-alpine
-  working_dir: /app
-  volumes:
-    - ./scripts/device-simulator.js:/app/device-simulator.js:ro
+  build:
+    context: .
+    dockerfile: Dockerfile.device
+  image: servicenexus/device-simulator:test
+  labels:
+    com.servicenexus.proprietary: "true"
+    com.servicenexus.component: "device-simulator"
+  networks:
+    - servicenexus-internal
   depends_on:
     servicenexus-server:
       condition: service_healthy
@@ -252,7 +292,6 @@ device-extra:
     - DEVICE_ROLE=technician
     - DEVICE_NAME=extra-device-1
     - SIMULATE_COUNT=5
-  command: ["node", "/app/device-simulator.js"]
 ```
 
 ---

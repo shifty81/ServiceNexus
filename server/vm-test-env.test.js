@@ -18,6 +18,7 @@ describe('VM Test Environment – File Presence', () => {
     'scripts/vm-test-env.sh',
     'scripts/device-simulator.js',
     '.github/workflows/vm-test.yml',
+    'Dockerfile.device',
   ];
 
   requiredFiles.forEach((file) => {
@@ -59,8 +60,27 @@ describe('docker-compose.test.yml – Structure', () => {
     expect(content).toContain('healthcheck:');
   });
 
-  test('mounts device-simulator.js into device containers', () => {
-    expect(content).toContain('device-simulator.js');
+  test('references device-simulator.js via Dockerfile.device', () => {
+    expect(content).toContain('Dockerfile.device');
+  });
+
+  test('defines an isolated internal network', () => {
+    expect(content).toContain('servicenexus-internal:');
+    expect(content).toContain('internal: true');
+  });
+
+  test('labels services as proprietary', () => {
+    expect(content).toContain('com.servicenexus.proprietary');
+  });
+
+  test('devices build from project Dockerfiles (no public image pulls)', () => {
+    // Device services should NOT use "image: node:" — they build from Dockerfile.device
+    expect(content).not.toContain('image: node:');
+  });
+
+  test('assigns proprietary image tags', () => {
+    expect(content).toContain('servicenexus/server:test');
+    expect(content).toContain('servicenexus/device-simulator:test');
   });
 });
 
@@ -112,6 +132,36 @@ describe('device-simulator.js – Structure', () => {
     modules.forEach((mod) => {
       expect(builtins).toContain(mod);
     });
+  });
+});
+
+describe('Dockerfile.device – Proprietary Device Image', () => {
+  let content;
+
+  beforeAll(() => {
+    content = fs.readFileSync(path.join(ROOT, 'Dockerfile.device'), 'utf8');
+  });
+
+  test('starts FROM node:18-alpine base', () => {
+    expect(content).toContain('FROM node:18-alpine');
+  });
+
+  test('copies device-simulator.js into the image', () => {
+    expect(content).toContain('COPY scripts/device-simulator.js');
+  });
+
+  test('includes proprietary labels', () => {
+    expect(content).toContain('com.servicenexus.proprietary');
+    expect(content).toContain('com.servicenexus.component');
+  });
+
+  test('runs as non-root user for security', () => {
+    expect(content).toContain('USER');
+    expect(content).toMatch(/adduser/);
+  });
+
+  test('default CMD runs the device simulator', () => {
+    expect(content).toContain('CMD ["node", "/app/device-simulator.js"]');
   });
 });
 

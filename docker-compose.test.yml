@@ -1,9 +1,10 @@
 ###############################################################################
-# ServiceNexus – VM Test Environment
+# ServiceNexus – Proprietary VM Test Environment
 #
-# Spins up a ServiceNexus server together with multiple simulated "device"
-# containers so that cross-device interactions (API calls, WebSocket events)
-# can be exercised in an isolated, reproducible environment.
+# Fully self-contained, proprietary multi-device test environment.
+# Every container is built from project-owned Dockerfiles — no public images
+# are pulled at runtime.  All services communicate over an isolated internal
+# Docker network that is not exposed to the host.
 #
 # Usage:
 #   docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
@@ -13,12 +14,38 @@
 ###############################################################################
 version: '3.8'
 
+# ── Isolated internal network ────────────────────────────────────────
+networks:
+  servicenexus-internal:
+    driver: bridge
+    internal: true          # no outbound internet access
+    labels:
+      com.servicenexus.proprietary: "true"
+      com.servicenexus.purpose: "vm-test-environment"
+
+  # Gateway network — only the server connects here so the health-check
+  # (which uses wget to localhost) can resolve, and the host can reach
+  # port 3001 for optional manual inspection.
+  servicenexus-gateway:
+    driver: bridge
+    labels:
+      com.servicenexus.proprietary: "true"
+
 services:
   # ── Core ServiceNexus application ──────────────────────────────────
   servicenexus-server:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: servicenexus/server:test
+    labels:
+      com.servicenexus.proprietary: "true"
+      com.servicenexus.component: "server"
     ports:
       - "3001:3001"
+    networks:
+      - servicenexus-internal
+      - servicenexus-gateway
     environment:
       - NODE_ENV=test
       - PORT=3001
@@ -39,10 +66,16 @@ services:
 
   # ── Simulated field-technician device (mobile) ─────────────────────
   device-mobile:
-    image: node:18-alpine
-    working_dir: /app
-    volumes:
-      - ./scripts/device-simulator.js:/app/device-simulator.js:ro
+    build:
+      context: .
+      dockerfile: Dockerfile.device
+    image: servicenexus/device-simulator:test
+    labels:
+      com.servicenexus.proprietary: "true"
+      com.servicenexus.component: "device-simulator"
+      com.servicenexus.device-role: "technician"
+    networks:
+      - servicenexus-internal
     depends_on:
       servicenexus-server:
         condition: service_healthy
@@ -51,14 +84,19 @@ services:
       - DEVICE_ROLE=technician
       - DEVICE_NAME=mobile-tech-1
       - SIMULATE_COUNT=5
-    command: ["node", "/app/device-simulator.js"]
 
   # ── Simulated office / dispatcher device (desktop) ─────────────────
   device-desktop:
-    image: node:18-alpine
-    working_dir: /app
-    volumes:
-      - ./scripts/device-simulator.js:/app/device-simulator.js:ro
+    build:
+      context: .
+      dockerfile: Dockerfile.device
+    image: servicenexus/device-simulator:test
+    labels:
+      com.servicenexus.proprietary: "true"
+      com.servicenexus.component: "device-simulator"
+      com.servicenexus.device-role: "dispatcher"
+    networks:
+      - servicenexus-internal
     depends_on:
       servicenexus-server:
         condition: service_healthy
@@ -67,14 +105,19 @@ services:
       - DEVICE_ROLE=dispatcher
       - DEVICE_NAME=desktop-dispatch-1
       - SIMULATE_COUNT=5
-    command: ["node", "/app/device-simulator.js"]
 
   # ── Simulated tablet device (supervisor / inspector) ───────────────
   device-tablet:
-    image: node:18-alpine
-    working_dir: /app
-    volumes:
-      - ./scripts/device-simulator.js:/app/device-simulator.js:ro
+    build:
+      context: .
+      dockerfile: Dockerfile.device
+    image: servicenexus/device-simulator:test
+    labels:
+      com.servicenexus.proprietary: "true"
+      com.servicenexus.component: "device-simulator"
+      com.servicenexus.device-role: "admin"
+    networks:
+      - servicenexus-internal
     depends_on:
       servicenexus-server:
         condition: service_healthy
@@ -83,7 +126,6 @@ services:
       - DEVICE_ROLE=admin
       - DEVICE_NAME=tablet-admin-1
       - SIMULATE_COUNT=5
-    command: ["node", "/app/device-simulator.js"]
 
 volumes:
   test-data:
