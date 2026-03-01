@@ -1,4 +1,4 @@
-# FieldForge - Quick Setup Guide
+# ServiceNexus - Quick Setup Guide
 
 ## Installation Steps
 

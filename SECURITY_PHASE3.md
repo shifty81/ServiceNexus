@@ -73,9 +73,9 @@ HMAC signature verification for webhook deliveries:
 - **Algorithm:** HMAC-SHA256
 - **Secret:** Unique secret per webhook
 - **Headers:**
-  - `X-FieldForge-Signature`: HMAC signature
-  - `X-FieldForge-Delivery`: Unique delivery ID
-  - `X-FieldForge-Event`: Event type
+  - `X-ServiceNexus-Signature`: HMAC signature
+  - `X-ServiceNexus-Delivery`: Unique delivery ID
+  - `X-ServiceNexus-Event`: Event type
 
 **Verification Example:**
 ```javascript
@@ -286,4 +286,4 @@ router.post('/', async (req, res) => { ... }); // Protected
 
 ---
 
-*FieldForge - Empowering field service businesses with AI* 🚀
+*ServiceNexus - Empowering field service businesses with AI* 🚀

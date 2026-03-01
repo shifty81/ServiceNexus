@@ -1,11 +1,11 @@
-# FieldForge
+# ServiceNexus
 
-[![CI/CD Pipeline](https://github.com/shifty81/FieldForge/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/shifty81/FieldForge/actions)
+[![CI/CD Pipeline](https://github.com/shifty81/ServiceNexus/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/shifty81/ServiceNexus/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **AI-Powered Mobile Forms & Field Service Management Platform**
 
-FieldForge is a comprehensive, all-in-one field service management platform that combines AI-powered form creation with dispatching, inventory tracking, customer management (CRM), invoicing, and mobile capabilities. Designed for small to mid-sized businesses in trades like HVAC, plumbing, electrical, and construction.
+ServiceNexus is a comprehensive, all-in-one field service management platform that combines AI-powered form creation with dispatching, inventory tracking, customer management (CRM), invoicing, and mobile capabilities. Designed for small to mid-sized businesses in trades like HVAC, plumbing, electrical, and construction.
 
 ---
 
@@ -143,8 +143,8 @@ FieldForge is a comprehensive, all-in-one field service management platform that
 
 ```powershell
 # Clone the repository
-git clone https://github.com/shifty81/FieldForge.git
-cd FieldForge
+git clone https://github.com/shifty81/ServiceNexus.git
+cd ServiceNexus
 
 # Run automated build script (handles everything!)
 .\build.ps1
@@ -159,8 +159,8 @@ The PowerShell script automatically handles all setup steps including prerequisi
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/shifty81/FieldForge.git
-cd FieldForge
+git clone https://github.com/shifty81/ServiceNexus.git
+cd ServiceNexus
 ```
 
 2. **Install server dependencies**
@@ -227,8 +227,8 @@ NODE_ENV=production npm start
 docker compose up -d
 
 # Or build the image manually
-docker build -t fieldforge .
-docker run -p 3001:3001 -e JWT_SECRET=your-secret fieldforge
+docker build -t servicenexus .
+docker run -p 3001:3001 -e JWT_SECRET=your-secret servicenexus
 ```
 
 Configure remote hosting via environment variables in `.env` or `docker-compose.yml`:
@@ -432,9 +432,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Documentation**: [GitHub Wiki](https://github.com/shifty81/FieldForge/wiki)
-- **Issues**: [GitHub Issues](https://github.com/shifty81/FieldForge/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/shifty81/FieldForge/discussions)
+- **Documentation**: [GitHub Wiki](https://github.com/shifty81/ServiceNexus/wiki)
+- **Issues**: [GitHub Issues](https://github.com/shifty81/ServiceNexus/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/shifty81/ServiceNexus/discussions)
 
 ---
 
@@ -447,4 +447,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**FieldForge** - Empowering field service businesses with AI-powered digital transformation 🚀
+**ServiceNexus** - Empowering field service businesses with AI-powered digital transformation 🚀

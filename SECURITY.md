@@ -45,7 +45,7 @@ npm list jspdf
 
 Expected output:
 ```
-fieldforge-client@1.0.0
+servicenexus-client@1.0.0
 └── jspdf@4.0.0
 ```
 
@@ -192,7 +192,7 @@ If a security issue is discovered:
 
 For security concerns:
 - Report via GitHub Security Advisories
-- Email: security@fieldforge.example (update with actual email)
+- Email: security@servicenexus.example (update with actual email)
 - Response time: Within 24 hours for critical issues
 
 ---
