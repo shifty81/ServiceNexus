@@ -232,13 +232,13 @@ function CustomerPortal({ socket }) {
           <span className="mobile-nav-icon">➕</span>
           <span className="mobile-nav-label">New</span>
         </Link>
-        <Link to="/" className="mobile-nav-item">
+        <Link to="/invoices" className="mobile-nav-item">
           <span className="mobile-nav-icon">💰</span>
           <span className="mobile-nav-label">Invoices</span>
         </Link>
-        <Link to="/" className="mobile-nav-item">
-          <span className="mobile-nav-icon">👤</span>
-          <span className="mobile-nav-label">Account</span>
+        <Link to="/estimates" className="mobile-nav-item">
+          <span className="mobile-nav-icon">📄</span>
+          <span className="mobile-nav-label">Estimates</span>
         </Link>
       </nav>
     </div>

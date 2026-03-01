@@ -119,16 +119,15 @@ router.get('/technician/:userId', async (req, res) => {
 
     const activeJobs = assignedCalls.filter(sc => sc.status === 'in-progress').length;
     const pendingJobs = assignedCalls.filter(sc => sc.status === 'pending').length;
+    const today = new Date().toISOString().split('T')[0];
     const completedToday = assignedCalls.filter(sc => {
       if (sc.status !== 'completed' || !sc.completed_at) return false;
-      const today = new Date().toISOString().split('T')[0];
-      return sc.completed_at.startsWith(today);
+      return new Date(sc.completed_at).toISOString().split('T')[0] === today;
     }).length;
     const activeTimeEntry = timeEntries.find(te => te.status === 'active');
     const todayHours = timeEntries
       .filter(te => {
-        const today = new Date().toISOString().split('T')[0];
-        return te.clock_in && te.clock_in.startsWith(today);
+        return te.clock_in && new Date(te.clock_in).toISOString().split('T')[0] === today;
       })
       .reduce((sum, te) => sum + (te.total_hours || 0), 0);
 
