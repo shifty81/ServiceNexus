@@ -4,7 +4,6 @@ import './ApiDocs.css';
 
 function ApiDocs() {
   const [groups, setGroups] = useState({});
-  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
@@ -22,7 +21,6 @@ function ApiDocs() {
       setLoading(true);
       const response = await axios.get('/api/docs/endpoints');
       setGroups(response.data.groups || {});
-      setTotal(response.data.total || 0);
       setError(null);
     } catch (err) {
       setError('Failed to load API documentation');

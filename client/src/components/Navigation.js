@@ -11,7 +11,7 @@ function Navigation({ user, onLogout }) {
     <nav className="navigation">
       <div className="nav-container">
         <Link to="/" className="nav-brand">
-          <span className="nav-logo">📋</span>
+          <span className="nav-logo">⚡</span>
           FieldForge {userType === 'client' ? 'Client' : userType === 'technician' ? 'Technician' : ''}
         </Link>
         
@@ -106,8 +106,17 @@ function Navigation({ user, onLogout }) {
               <Link to="/analytics" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Analytics
               </Link>
+              <Link to="/smart-routing" className="nav-link" onClick={() => setMenuOpen(false)}>
+                Smart Routing
+              </Link>
+              <Link to="/maintenance" className="nav-link" onClick={() => setMenuOpen(false)}>
+                Maintenance
+              </Link>
               <Link to="/reports" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Reports
+              </Link>
+              <Link to="/api-docs" className="nav-link" onClick={() => setMenuOpen(false)}>
+                API Docs
               </Link>
               <Link to="/system" className="nav-link" onClick={() => setMenuOpen(false)}>
                 System
