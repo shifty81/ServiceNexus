@@ -76,14 +76,14 @@ describe('Pictures API', () => {
   });
 
   afterAll(() => {
-    try { fs.unlinkSync(TEST_IMAGE_PATH); } catch (_) {}
+    try { fs.unlinkSync(TEST_IMAGE_PATH); } catch { /* cleanup - ignore missing file */ }
     // Clean up any multer-created upload files
     const uploadDir = path.join(__dirname, 'uploads/service-call-pictures');
     try {
       const files = fs.readdirSync(uploadDir);
       files.forEach(f => fs.unlinkSync(path.join(uploadDir, f)));
       fs.rmdirSync(uploadDir);
-    } catch (_) {}
+    } catch { /* cleanup - ignore if directory doesn't exist */ }
   });
 
   beforeEach(() => {
