@@ -24,9 +24,8 @@ async function generatePONumber() {
   return `${prefix}${String(nextNum).padStart(4, '0')}`;
 }
 
-// Calculate totals from line items
-// TODO: Make tax_rate configurable per organization or purchase order
-function calculatePOTotals(line_items) {
+// Calculate totals from line items with configurable tax rate
+function calculatePOTotals(line_items, tax_rate_input) {
   let items;
   try {
     items = JSON.parse(line_items || '[]');
@@ -34,9 +33,9 @@ function calculatePOTotals(line_items) {
     return { error: 'Invalid line_items JSON' };
   }
   const subtotal = items.reduce((sum, item) => sum + ((item.quantity || 0) * (item.unit_price || 0)), 0);
-  const tax_rate = 0; // Currently hardcoded to 0 - can be made configurable via settings
-  const tax_amount = subtotal * tax_rate;
-  const total = subtotal + tax_amount;
+  const tax_rate = (typeof tax_rate_input === 'number' && tax_rate_input >= 0) ? tax_rate_input : 0;
+  const tax_amount = parseFloat((subtotal * tax_rate).toFixed(2));
+  const total = parseFloat((subtotal + tax_amount).toFixed(2));
   
   return { subtotal, tax_rate, tax_amount, total };
 }
@@ -116,6 +115,7 @@ router.post('/', authenticateToken, async (req, res) => {
       vendor_phone,
       vendor_email,
       line_items,
+      tax_rate: tax_rate_input,
       notes,
       requested_by
     } = req.body;
@@ -123,8 +123,8 @@ router.post('/', authenticateToken, async (req, res) => {
     const id = uuidv4();
     const po_number = await generatePONumber();
 
-    // Calculate totals using helper function
-    const totals = calculatePOTotals(line_items);
+    // Calculate totals using helper function with optional tax_rate
+    const totals = calculatePOTotals(line_items, tax_rate_input);
     if (totals.error) {
       return res.status(400).json({ error: totals.error });
     }
@@ -164,11 +164,12 @@ router.put('/:id', authenticateToken, async (req, res) => {
       vendor_email,
       status,
       line_items,
+      tax_rate: tax_rate_input,
       notes
     } = req.body;
 
-    // Calculate totals using helper function
-    const totals = calculatePOTotals(line_items);
+    // Calculate totals using helper function with optional tax_rate
+    const totals = calculatePOTotals(line_items, tax_rate_input);
     if (totals.error) {
       return res.status(400).json({ error: totals.error });
     }

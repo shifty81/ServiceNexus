@@ -192,6 +192,71 @@ describe('Purchase Orders API', () => {
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to create purchase order');
     });
+
+    test('should apply custom tax_rate when provided', async () => {
+      const poWithTax = {
+        ...newPO,
+        tax_rate: 0.08
+      };
+      const createdPO = {
+        id: 'test-po-id',
+        po_number: 'PO-2025-0001',
+        vendor_name: 'Vendor A',
+        subtotal: 200,
+        tax_rate: 0.08,
+        tax_amount: 16,
+        total: 216,
+        status: 'draft'
+      };
+
+      mockDb.get
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(createdPO);
+      mockDb.run.mockResolvedValue({ id: 1 });
+
+      const response = await request(app)
+        .post('/api/purchase-orders')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(poWithTax);
+
+      expect(response.status).toBe(200);
+      // Verify the db.run INSERT was called with correct tax values
+      const insertCall = mockDb.run.mock.calls[0];
+      const insertParams = insertCall[1];
+      // subtotal=200, tax_rate=0.08, tax_amount=16, total=216
+      expect(insertParams[7]).toBe(200);   // subtotal
+      expect(insertParams[8]).toBe(0.08);  // tax_rate
+      expect(insertParams[9]).toBe(16);    // tax_amount
+      expect(insertParams[10]).toBe(216);  // total
+    });
+
+    test('should default tax_rate to 0 when not provided', async () => {
+      const createdPO = {
+        id: 'test-po-id',
+        po_number: 'PO-2025-0001',
+        subtotal: 200,
+        tax_rate: 0,
+        tax_amount: 0,
+        total: 200,
+        status: 'draft'
+      };
+
+      mockDb.get
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(createdPO);
+      mockDb.run.mockResolvedValue({ id: 1 });
+
+      const response = await request(app)
+        .post('/api/purchase-orders')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(newPO);
+
+      expect(response.status).toBe(200);
+      const insertCall = mockDb.run.mock.calls[0];
+      const insertParams = insertCall[1];
+      expect(insertParams[8]).toBe(0);   // tax_rate
+      expect(insertParams[9]).toBe(0);   // tax_amount
+    });
   });
 
   describe('PUT /api/purchase-orders/:id', () => {
@@ -241,6 +306,38 @@ describe('Purchase Orders API', () => {
 
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Failed to update purchase order');
+    });
+
+    test('should apply custom tax_rate on update', async () => {
+      const poWithTax = {
+        ...updatedPO,
+        tax_rate: 0.10
+      };
+      const returnedPO = {
+        id: 'po-1',
+        vendor_name: 'Vendor B',
+        subtotal: 225,
+        tax_rate: 0.10,
+        tax_amount: 22.5,
+        total: 247.5,
+        status: 'pending'
+      };
+
+      mockDb.run.mockResolvedValue({ changes: 1 });
+      mockDb.get.mockResolvedValue(returnedPO);
+
+      const response = await request(app)
+        .put('/api/purchase-orders/po-1')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(poWithTax);
+
+      expect(response.status).toBe(200);
+      const updateCall = mockDb.run.mock.calls[0];
+      const updateParams = updateCall[1];
+      // subtotal=225, tax_amount=22.5, total=247.5
+      expect(updateParams[6]).toBe(225);    // subtotal
+      expect(updateParams[7]).toBe(22.5);   // tax_amount
+      expect(updateParams[8]).toBe(247.5);  // total
     });
   });
 
