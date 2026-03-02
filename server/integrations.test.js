@@ -590,4 +590,154 @@ describe('Integrations API', () => {
       expect(res.body.error).toContain('Failed to delete integration');
     });
   });
+
+  // --- Connector sync() tests ---
+
+  describe('Connector sync functions', () => {
+    const quickbooks = require('./connectors/quickbooks');
+    const salesforce = require('./connectors/salesforce');
+    const google = require('./connectors/google');
+    const microsoft365 = require('./connectors/microsoft365');
+    const procore = require('./connectors/procore');
+
+    const validCreds = JSON.stringify({ client_id: 'a', client_secret: 'b', refresh_token: 'c' });
+
+    test('quickbooks sync returns success with customer and invoice counts', async () => {
+      mockDb.query
+        .mockResolvedValueOnce([{ id: 'c1' }, { id: 'c2' }])
+        .mockResolvedValueOnce([{ id: 'inv1' }]);
+
+      const result = await quickbooks.sync(
+        { credentials: validCreds, config: JSON.stringify({ company_id: '123' }) },
+        mockDb
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.records_processed).toBe(3);
+      expect(result.details.customers_synced).toBe(2);
+      expect(result.details.invoices_synced).toBe(1);
+    });
+
+    test('quickbooks sync fails with invalid credentials', async () => {
+      const result = await quickbooks.sync(
+        { credentials: JSON.stringify({}), config: JSON.stringify({}) },
+        mockDb
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+    });
+
+    test('salesforce sync returns success with customer and service call counts', async () => {
+      mockDb.query
+        .mockResolvedValueOnce([{ id: 'c1' }])
+        .mockResolvedValueOnce([{ id: 'sc1' }, { id: 'sc2' }]);
+
+      const result = await salesforce.sync(
+        { credentials: validCreds, config: JSON.stringify({ instance_url: 'https://na1.salesforce.com' }) },
+        mockDb
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.records_processed).toBe(3);
+      expect(result.details.contacts_synced).toBe(1);
+      expect(result.details.cases_synced).toBe(2);
+    });
+
+    test('salesforce sync fails with missing config', async () => {
+      const result = await salesforce.sync(
+        { credentials: validCreds, config: JSON.stringify({}) },
+        mockDb
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('instance_url');
+    });
+
+    test('google sync returns success with customer and dispatch counts', async () => {
+      mockDb.query
+        .mockResolvedValueOnce([{ id: 'c1' }])
+        .mockResolvedValueOnce([{ id: 'd1' }, { id: 'd2' }, { id: 'd3' }]);
+
+      const result = await google.sync(
+        { credentials: validCreds, config: JSON.stringify({ scopes: 'calendar,contacts' }) },
+        mockDb
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.records_processed).toBe(4);
+      expect(result.details.contacts_synced).toBe(1);
+      expect(result.details.calendar_events_synced).toBe(3);
+    });
+
+    test('google sync fails with missing scopes', async () => {
+      const result = await google.sync(
+        { credentials: validCreds, config: JSON.stringify({}) },
+        mockDb
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('scopes');
+    });
+
+    test('microsoft365 sync returns success with customer and dispatch counts', async () => {
+      mockDb.query
+        .mockResolvedValueOnce([{ id: 'c1' }, { id: 'c2' }])
+        .mockResolvedValueOnce([{ id: 'd1' }]);
+
+      const result = await microsoft365.sync(
+        { credentials: validCreds, config: JSON.stringify({ tenant_id: 'tenant-abc' }) },
+        mockDb
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.records_processed).toBe(3);
+      expect(result.details.contacts_synced).toBe(2);
+      expect(result.details.calendar_events_synced).toBe(1);
+    });
+
+    test('microsoft365 sync fails with missing tenant_id', async () => {
+      const result = await microsoft365.sync(
+        { credentials: validCreds, config: JSON.stringify({}) },
+        mockDb
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('tenant_id');
+    });
+
+    test('procore sync returns success with customer and dispatch counts', async () => {
+      mockDb.query
+        .mockResolvedValueOnce([{ id: 'c1' }])
+        .mockResolvedValueOnce([{ id: 'd1' }, { id: 'd2' }]);
+
+      const result = await procore.sync(
+        { credentials: validCreds, config: JSON.stringify({ company_id: 'pc-999' }) },
+        mockDb
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.records_processed).toBe(3);
+      expect(result.details.vendors_synced).toBe(1);
+      expect(result.details.projects_synced).toBe(2);
+    });
+
+    test('procore sync fails with missing company_id', async () => {
+      const result = await procore.sync(
+        { credentials: validCreds, config: JSON.stringify({}) },
+        mockDb
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('company_id');
+    });
+
+    test('all connectors handle null credentials/config gracefully', async () => {
+      for (const connector of [quickbooks, salesforce, google, microsoft365, procore]) {
+        const result = await connector.sync({ credentials: null, config: null }, mockDb);
+        expect(result.success).toBe(false);
+        expect(result.records_processed).toBe(0);
+      }
+    });
+  });
 });
